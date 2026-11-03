@@ -1,0 +1,11 @@
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.env
+**/.env.*
+**/secrets
+**/*.pem
+**/*.key
+**/test_*.py
+.git
+.arc

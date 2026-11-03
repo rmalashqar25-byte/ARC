@@ -1,0 +1,31 @@
+name: arc
+description: "ARC company workspace for ideas, teams, and projects."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  lottie: ^3.3.3
+  http: ^1.6.0
+  uuid: ^4.6.0
+  web: ^1.1.1
+  url_launcher: ^6.3.2
+  dotenv: ^4.2.0
+  flutter_markdown_plus: 1.0.12
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - lib/backend/company/model_catalog.json
+    - assets/images/
+    - assets/animation/

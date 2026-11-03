@@ -1,0 +1,13 @@
+target-version = "py313"
+line-length = 88
+extend-exclude = [".arc", ".venv", "build"]
+
+[lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+# These standalone entry points add the repository's backend to sys.path first.
+[lint.per-file-ignores]
+"services/terminal_gateway.py" = ["E402"]
+"tools/prepare_terminal.py" = ["E402"]
+"tools/verify_terminal_connection.py" = ["E402"]
+"tools/verify_terminal_runtime.py" = ["E402"]

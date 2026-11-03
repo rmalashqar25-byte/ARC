@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ARC</string>
+    <string name="accessibility_service_name">ARC App Control</string>
+    <string name="accessibility_service_description">Allows ARC to perform only the app-control actions you request. ARC blocks text entry into password fields, and you can disable this service at any time.</string>
+</resources>

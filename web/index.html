@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="stylesheet" href="arc_intro.css">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="ARC Company workspace">
+  <meta name="referrer" content="no-referrer">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ARC">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>ARC</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <main id="arc-startup" class="arc-startup" aria-label="Opening ARC">
+    <div class="arc-startup__mark" aria-hidden="true">A</div>
+    <h1>ARC</h1>
+    <p id="arc-startup-status" role="status" aria-live="polite">Opening your workspace…</p>
+    <div class="arc-startup__pulse" aria-hidden="true"></div>
+    <button id="arc-startup-retry" class="arc-intro__retry" type="button" hidden>Try again</button>
+    <noscript>Enable JavaScript to open ARC.</noscript>
+  </main>
+  <section id="arc-intro" class="arc-intro" tabindex="-1" role="dialog" aria-modal="true" aria-label="Welcome to ARC">
+    <canvas id="arc-intro-canvas" class="arc-intro__canvas" aria-hidden="true"></canvas>
+    <header class="arc-intro__header">
+      <div class="arc-intro__brand" aria-label="ARC">ARC<span>THE BEGINNING</span></div>
+      <button id="arc-intro-skip" class="arc-intro__skip" type="button">Skip intro <span aria-hidden="true">↗</span></button>
+    </header>
+    <div class="arc-intro__copy">
+      <p class="arc-intro__eyebrow">TWO MINDS. ONE POSSIBILITY.</p>
+      <h1 class="arc-intro__title">It starts with<br>a <em>connection.</em></h1>
+      <p class="arc-intro__caption">Your idea. Our next chapter.</p>
+    </div>
+    <footer class="arc-intro__footer">
+      <div class="arc-intro__status"><span id="arc-intro-status" role="status" aria-live="polite">Bringing things together</span><button id="arc-intro-retry" class="arc-intro__retry" type="button">Try again</button></div>
+      <span>A little ambition.<br>Infinite possibility.</span>
+    </footer>
+    <div class="arc-intro__track" aria-hidden="true"><div id="arc-intro-progress" class="arc-intro__progress"></div></div>
+  </section>
+  <script src="arc_startup.js"></script>
+  <script src="arc_intro.js"></script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://arc1-backend.nicesmoke-c99e1085.spaincentral.azurecontainerapps.io https://www.gstatic.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'

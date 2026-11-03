@@ -1,0 +1,10 @@
+[
+  {"id":"gpt_sol","name":"GPT Sol","summary":"Your operations manager: turns the company goal into milestones, assigns owners, and keeps delivery moving.","role_id":"manager","role":"Operations Manager","price":49,"model_env":"ARC_MARKET_GPT_SOL_MODEL"},
+  {"id":"claude","name":"Claude","summary":"Your technology lead: plans the architecture, reviews code, and coordinates the engineering team.","role_id":"cto","role":"Chief Technology Officer","price":59,"model_env":"ARC_MARKET_CLAUDE_MODEL"},
+  {"id":"gemini","name":"Gemini","summary":"Your marketing lead: develops customer research, positioning, and a practical launch plan.","role_id":"marketing","role":"Marketing Director","price":39,"model_env":"ARC_MARKET_GEMINI_MODEL"},
+  {"id":"deepseek","name":"DeepSeek","summary":"Your finance lead: builds budget drafts, tracks assumptions, and examines the business numbers.","role_id":"finance","role":"Finance Director","price":29,"model_env":"ARC_MARKET_DEEPSEEK_MODEL"},
+  {"id":"qwen","name":"Qwen","summary":"Your application developer: implements features, investigates bugs, and reports to the technology lead.","role_id":"app_developer","role":"Application Developer","price":25,"model_env":"ARC_MARKET_QWEN_MODEL"},
+  {"id":"mistral","name":"Mistral","summary":"Your researcher: compares markets and competitors, checks evidence, and reports to the marketing lead.","role_id":"market_researcher","role":"Market Researcher","price":19,"model_env":"ARC_MARKET_MISTRAL_MODEL"},
+  {"id":"llama","name":"Llama","summary":"Your content specialist: drafts product copy, campaign ideas, and customer communications.","role_id":"content_marketer","role":"Content Marketer","price":15,"model_env":"ARC_MARKET_LLAMA_MODEL"},
+  {"id":"grok","name":"Grok","summary":"Your sales specialist: develops outreach drafts, qualification questions, and a sales pipeline plan.","role_id":"sales_specialist","role":"Sales Specialist","price":35,"model_env":"ARC_MARKET_GROK_MODEL"}
+]

@@ -1,0 +1,99 @@
+name: arc
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  backend:
+    build:
+      context: ../../lib/backend
+    image: arc-backend:release
+    restart: unless-stopped
+    init: true
+    network_mode: host
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 1.0
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,uid=10001,gid=10001
+    env_file:
+      - /etc/arc/provider.env
+    environment:
+      ARC_ENVIRONMENT: production
+      ARC_BACKEND_API_KEY: ${ARC_BACKEND_API_KEY:?Run install.sh first}
+      ARC_ALLOWED_ORIGINS: https://${ARC_PUBLIC_HOST:?Set a public hostname}
+      ARC_TRUSTED_HOSTS: ${ARC_PUBLIC_HOST},127.0.0.1,localhost
+      ARC_COMPANY_WORKER_ENABLED: "1"
+      ARC_COMPANY_DB: /data/state/company.sqlite3
+      ARC_PROVIDER_VAULT: /data/state/provider-vault
+      ARC_AGENT_WORKSPACE_ROOT: /data/projects
+      ARC_TERMINAL_RUNNER_URL: http://127.0.0.1:8768/run
+      ARC_TERMINAL_RUNNER_TOKEN: ${ARC_TERMINAL_RUNNER_TOKEN:?Run install.sh first}
+      ARC_TERMINAL_GRANTS_FILE: /terminal/grants.json
+    volumes:
+      - ${ARC_DATA_ROOT:?Run install.sh first}/data:/data
+      - ${ARC_DATA_ROOT}/terminal:/terminal
+    command: [python, -m, uvicorn, "app:app", --host, 127.0.0.1, --port, "8000", --workers, "1", --limit-concurrency, "128", --timeout-keep-alive, "5", --forwarded-allow-ips, 127.0.0.1, --no-access-log]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
+    logging: *logging
+
+  terminal:
+    build:
+      context: ../..
+      dockerfile: deploy/vultr/Dockerfile.gateway
+    image: arc-terminal-gateway:release
+    restart: unless-stopped
+    init: true
+    network_mode: host
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 192m
+    cpus: 0.5
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=16m
+    environment:
+      ARC_TERMINAL_GATEWAY_CONFIG: /config/gateway.json
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/arc/terminal-gateway.json:/config/gateway.json:ro
+      - ${ARC_DATA_ROOT}/terminal:/terminal:ro
+    # Only this private broker can reach Docker. Backend and job containers cannot.
+    logging: *logging
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    network_mode: host
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 192m
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=16m
+    environment:
+      ARC_PUBLIC_HOST: ${ARC_PUBLIC_HOST}
+      ARC_BACKEND_API_KEY: ${ARC_BACKEND_API_KEY}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../web-build:/srv:ro
+      - ${ARC_DATA_ROOT}/caddy/data:/data
+      - ${ARC_DATA_ROOT}/caddy/config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging: *logging
