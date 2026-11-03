@@ -35,6 +35,7 @@ jobs:
         with:
           repository: flutter/flutter
           ref: 6a19cca56475dbfba1478ee68d7bd0c2ef891da1 # Flutter 3.47.5
+          fetch-depth: 0 # Flutter derives its SDK version from Git tags.
           path: .flutter-sdk
           persist-credentials: false
       - run: echo "$GITHUB_WORKSPACE/.flutter-sdk/bin" >> "$GITHUB_PATH"
