@@ -4,9 +4,11 @@ ARC is a company workspace where a founder talks to one CEO, delegates work thro
 
 ## Deployment status
 
-**Preparation stage, 31 October 2026. ARC has not yet been deployed on Vultr.**
+**Deployed on Vultr Compute, 5 November 2026.**
 
-The working prototype currently runs locally. No Vultr VM, Serverless Inference deployment, public Vultr application URL, or recorded Vultr containment demonstration is claimed in this document. Update this section with actual services, region, deployment date, public URL, and evidence after deployment. Do not publish API keys, private addresses, invite tokens, or account identifiers.
+Public demo: **[Open ARC](https://arc.64.177.59.174.sslip.io/)**. The application runs on one Ubuntu 24.04 x86_64 VM in **Atlanta (ATL)** with **2 vCPUs, 4 GB RAM, and 80 GB SSD storage**. Caddy provides HTTPS and serves the compiled Flutter application. The Python backend and terminal broker listen only on loopback. Company state and encrypted provider connections use private persistent VM directories outside the release. Vultr Serverless Inference is not configured or claimed.
+
+Verified on the running Vultr VM: frontend assets and public API routing; a missing session capability is rejected; API documentation and detailed readiness routes return 404 publicly; four real execution isolation checks and one timeout/cleanup check pass. Provider credentials remain outside Git and outside execution containers. A real Gemini CEO reply through the public ARC API and a zero-price OpenRouter inference request from the deployed backend both succeeded. A recorded technical demo and full delegated company-job evidence remain separate submission tasks.
 
 Recommended challenge: **Powering the Future of Work**, because ARC coordinates ongoing company jobs, AI roles, and human deliverables. The challenge selection remains the team's decision. **Blast Radius Zero** is an alternative that adds stricter inference and execution requirements.
 
@@ -31,9 +33,9 @@ ARC also supports finance, operations, marketing, and legal roles. These are sof
 
 Marketplace role prices are demo values. Model provider charges are separate. Automatic work has a request-count limit, not a guaranteed currency spending cap.
 
-## Proposed Vultr architecture
+## Deployed Vultr architecture
 
-**The following is a deployment plan, not an inventory of services already used.**
+**The following components run on the deployed Vultr VM.**
 
 ```mermaid
 flowchart TD
@@ -56,12 +58,12 @@ flowchart TD
     R --> A
 ```
 
-| Planned component | Purpose | Current state |
+| Component | Purpose | Current state |
 | --- | --- | --- |
-| Vultr Compute VM | Central Python control layer and web application delivery | Not provisioned |
-| Persistent private VM storage or an attached volume | Queue, recovery records, project data, and encrypted provider vault | Storage strategy to configure and test |
-| HTTPS reverse proxy | Public web origin and authenticated internal API forwarding | To configure |
-| Private container execution service on Vultr | Run restricted checks outside the application process | Linux adapter and deployment recipe added; VM verification pending |
+| Vultr Compute VM | Central Python control layer and web application delivery | Running in Atlanta on Ubuntu 24.04 |
+| Private VM SSD directories | Queue, recovery records, project data, and encrypted provider vault | Mounted from /var/lib/arc; no separate block-storage service used |
+| HTTPS reverse proxy | Public web origin and authenticated internal API forwarding | Caddy running with a public TLS certificate |
+| Private container execution service on Vultr | Run restricted checks outside the application process | Linux Docker broker; five real containment and timeout checks passed |
 | Vultr Serverless Inference | All agent model calls for Challenge 1; optional for Challenge 2 | Not configured or tested |
 
 Do not expose the backend, Docker socket, terminal gateway, database, or provider vault directly to the internet. Keep provider keys in the control layer and out of execution containers. Preserve one backend process for the current SQLite deployment. Configure and verify backups before relying on durable state.
@@ -80,15 +82,15 @@ For Challenge 2, personal provider connections can remain a product feature. For
 
 ## Current containment boundary and limits
 
-The existing local terminal implementation uses Windows/WSL and a disposable Docker container. The container runs as a non-root user, with no network, no host mounts, a read-only system, dropped Linux capabilities, and no-new-privileges. It limits memory to 256 MiB, CPU to one core, and process count to 64. Each command has a deadline and bounded output. The runner destroys the container after success or failure.
+The deployed terminal uses native Linux Docker; local Windows development retains the WSL adapter. Each disposable execution container runs as a non-root user, with no network, no host mounts, a read-only system, dropped Linux capabilities, and no-new-privileges. It limits memory to 256 MiB, CPU to one core, and process count to 64. Each command has a deadline and bounded output. The runner destroys the container after success or failure.
 
 Only an allowlist of Git, search, and test commands can enter the terminal. Python is restricted to `python -m pytest`. Model credentials are not copied into the container. Tool scope and explicit denials still apply.
 
-These controls have local test evidence. They do not prove a hardened VM boundary. Existing workspace read/update tools operate on scoped project files in the control layer; do not describe every ARC tool action as sandboxed. Before claiming Challenge 1 compliance, isolate all relevant execution and file operations on Vultr and re-run the containment checks there.
+These controls have local and real Vultr execution-test evidence. They do not prove a hardened VM boundary. Existing workspace read/update tools operate on scoped project files in the control layer; do not describe every ARC tool action as sandboxed. Before claiming Challenge 1 compliance, isolate all relevant execution and file operations and enforce Vultr inference. The present deployment does not claim full Challenge 1 compliance.
 
-## Deployment work remaining
+## Reproduce the deployment
 
-1. Confirm the challenge and claim event credits through the organizer's account flow. No cloud resources have been purchased or provisioned as part of this documentation task.
+1. Confirm the challenge and activate event credits through the organizer's account flow. The current ARC VM was provisioned by the account owner.
 2. Provision a Vultr VM and keep the administration and application network boundaries separate.
 3. Build Flutter web assets for the public API origin. Serve assets and API requests through HTTPS.
 4. Install the backend from `lib/backend/requirements.lock` using Python 3.13. Keep environment values outside source control.
@@ -97,7 +99,7 @@ These controls have local test evidence. They do not prove a hardened VM boundar
 7. Deploy and verify the Linux terminal adapter using `deploy/vultr/README.md`. The native Linux adapter is now included, with the existing WSL implementation retained for local use. Do not give the backend or job containers the Docker socket. The private administrative broker alone needs it.
 8. Configure persistent queue and vault storage, test restarts, and verify cross-workspace isolation. Protect the vault key with platform permissions and an appropriate recovery procedure.
 9. For Challenge 1, configure Vultr Serverless Inference, enforce it for all agent model calls, and verify actual execution containment on Vultr.
-10. Run a real job, independently verify its result, and record the technical demo. Add the public application URL and actual Vultr services to the top of this document.
+10. Run a delegated company job, independently verify its result, and record the technical demo. The public application URL and actual Vultr services are recorded above.
 
 ## Local reproduction
 
@@ -138,9 +140,9 @@ For Challenge 1, record this after the execution service is running on Vultr. An
 ## Submission checklist
 
 - [ ] Confirm the selected challenge.
-- [ ] Public repository contains the current source, setup instructions, and this Vultr explanation.
-- [ ] Backend and web application run on Vultr, with an actual public HTTPS URL.
-- [ ] Record the Vultr services, region, and deployment evidence accurately.
+- [x] Public repository contains the current source, setup instructions, and this Vultr explanation.
+- [x] Backend and web application run on Vultr, with an actual public HTTPS URL.
+- [x] Record the Vultr services, region, and deployment evidence accurately.
 - [ ] Record a technical demo showing an actual task and its result.
 - [ ] If entering Challenge 1, enforce Vultr inference and show a containment moment on Vultr.
 - [x] Prepare a PDF slide deck and cover artwork.

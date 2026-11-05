@@ -4,9 +4,9 @@
 
 ## Vultr deployment
 
-ARC is preparing for the **Vultr: Agent Rush Hackathon on lablab.ai**. As of **3 November 2026**, the prototype is locally verified and cloud deployment is in progress. No public Vultr application is claimed yet. The deployment includes the Flutter web app, Python control layer, persistent company queue, encrypted provider vault, HTTPS proxy, and Linux terminal broker.
+**Live demo: [Open ARC](https://arc.64.177.59.174.sslip.io/)**. ARC was deployed on **5 November 2026** to Vultr Compute in **Atlanta**, using an Ubuntu 24.04 VM with 2 vCPUs and 4 GB RAM. The deployment includes the Flutter web app, Python control layer, persistent company queue, encrypted provider vault, HTTPS proxy, and Linux terminal broker.
 
-The proposed services, deployment architecture, actual execution workflow, current containment limits, reproduction steps, and work remaining are documented in **[ARC on Vultr](docs/VULTR.md)**. This is a deployment plan, not a claim that cloud resources are already running. Add the actual public demo URL and services used after deployment. The organizer's current online build dates are 3-8 November 2026; see the [official event page](https://lablab.ai/ai-hackathons/vultr-hackathon).
+The services used, deployment architecture, execution workflow, containment checks, and reproduction steps are documented in **[ARC on Vultr](docs/VULTR.md)**. The running server passed HTTPS/API checks and five real terminal isolation and timeout checks. Vultr Serverless Inference is not used. The organizer's online build dates are 3-8 November 2026; see the [official event page](https://lablab.ai/ai-hackathons/vultr-hackathon).
 
 **[Vultr installation guide](deploy/vultr/README.md)** includes the production configuration, release packaging, HTTPS setup, persistent storage, and private execution service. Build web with `--dart-define=ARC_API_BASE_URL=/api` for this deployment. No developer credentials or local company data are included in a release.
 
