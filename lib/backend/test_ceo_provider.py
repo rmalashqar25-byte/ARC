@@ -12,6 +12,128 @@ from fastapi.testclient import TestClient
 
 
 class CeoProviderTests(unittest.IsolatedAsyncioTestCase):
+    async def google_response(
+        self, responses, *, structured=False, model="gemini-3.5-flash"
+    ):
+        with (
+            patch.dict(
+                os.environ,
+                {
+                    "ARC_CEO_PROVIDER": "google_ai_studio",
+                    "GEMINI_API_KEY": "synthetic-key",
+                    "GEMINI_CEO_MODEL": model,
+                },
+            ),
+            patch("company.ceo.httpx.AsyncClient") as factory,
+            patch("company.ceo.asyncio.sleep", new_callable=AsyncMock) as sleep,
+        ):
+            client = AsyncMock()
+            client.post.side_effect = responses
+            factory.return_value.__aenter__.return_value = client
+            text = await _generate(
+                system_instruction="System",
+                prompt="what u can do",
+                json_output=structured,
+            )
+            return text, client, sleep
+
+    async def test_google_retries_overload_once_without_switching_provider(self):
+        text, client, sleep = await self.google_response(
+            [
+                httpx.Response(
+                    503, json={"error": {"message": "private upstream details"}}
+                ),
+                httpx.Response(
+                    200,
+                    json={
+                        "candidates": [
+                            {"content": {"parts": [{"text": "Complete answer."}]}}
+                        ]
+                    },
+                ),
+            ]
+        )
+        self.assertEqual(text, "Complete answer.")
+        self.assertEqual(client.post.await_count, 2)
+        sleep.assert_awaited_once_with(1)
+        self.assertEqual(client.post.call_args_list[0], client.post.call_args_list[1])
+        payload = client.post.call_args.kwargs["json"]
+        self.assertEqual(
+            payload["generationConfig"]["thinkingConfig"], {"thinkingLevel": "minimal"}
+        )
+        self.assertNotIn("temperature", payload["generationConfig"])
+
+    async def test_google_auth_and_quota_failures_are_not_retried(self):
+        for status in (400, 401, 403, 429):
+            with self.subTest(status=status):
+                with (
+                    patch.dict(
+                        os.environ,
+                        {
+                            "ARC_CEO_PROVIDER": "google_ai_studio",
+                            "GEMINI_API_KEY": "synthetic-key",
+                        },
+                    ),
+                    patch("company.ceo.httpx.AsyncClient") as factory,
+                ):
+                    client = AsyncMock()
+                    client.post.return_value = httpx.Response(
+                        status, json={"error": {"message": "SYNTHETIC_SECRET"}}
+                    )
+                    factory.return_value.__aenter__.return_value = client
+                    with self.assertRaises(CeoProviderError) as error:
+                        await _generate(system_instruction="System", prompt="test")
+                    self.assertEqual(client.post.await_count, 1)
+                    self.assertNotIn("SYNTHETIC_SECRET", str(error.exception))
+
+    async def test_google_retry_is_bounded(self):
+        with self.assertRaises(CeoProviderError) as error:
+            await self.google_response([httpx.Response(503), httpx.Response(503)])
+        self.assertEqual(error.exception.status_code, 503)
+
+    async def test_google_hides_thought_parts_and_rejects_truncated_plans(self):
+        text, _, _ = await self.google_response(
+            [
+                httpx.Response(
+                    200,
+                    json={
+                        "candidates": [
+                            {
+                                "content": {
+                                    "parts": [
+                                        {
+                                            "thought": True,
+                                            "text": "SYNTHETIC_INTERNAL_THOUGHT",
+                                        },
+                                        {"text": "Final answer."},
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                )
+            ]
+        )
+        self.assertEqual(text, "Final answer.")
+        with self.assertRaises(CeoProviderError):
+            await self.google_response(
+                [
+                    httpx.Response(
+                        200,
+                        json={
+                            "candidates": [
+                                {
+                                    "content": {
+                                        "parts": [{"text": '{"message":"unfinished'}]
+                                    }
+                                }
+                            ]
+                        },
+                    )
+                ],
+                structured=True,
+            )
+
     async def test_openrouter_ceo_calls_configured_model_and_json_contract(self):
         with patch.dict(
             os.environ,
@@ -136,6 +258,30 @@ class CeoProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(len(generate.call_args.kwargs["system_instruction"]), 400)
         self.assertEqual(generate.call_args.kwargs["max_output_tokens"], 128)
         self.assertEqual(generate.call_args.kwargs["prompt"], "Hello")
+
+    async def test_capabilities_followup_is_a_small_plain_text_request(self):
+        import uuid
+
+        from company.ceo import run_ceo_agent
+
+        with (
+            patch(
+                "company.ceo._generate",
+                new_callable=AsyncMock,
+                return_value="I can help you plan and build your company.",
+            ) as generate,
+            patch("company.team.planning_marketplace") as market,
+        ):
+            result = await run_ceo_agent(
+                "what u can do",
+                "capabilities",
+                actor_id="capabilities-" + uuid.uuid4().hex,
+            )
+        market.assert_not_called()
+        self.assertEqual(result["response_kind"], "capabilities")
+        self.assertEqual(result["delegations"], [])
+        self.assertNotIn("json_output", generate.call_args.kwargs)
+        self.assertEqual(generate.call_args.kwargs["max_output_tokens"], 256)
 
     async def test_response_budget_cannot_exceed_security_ceiling(self):
         from company.provider_config import output_token_limit
