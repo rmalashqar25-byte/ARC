@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import os
+import stat
 import tempfile
 import time
 import unittest
@@ -58,6 +59,10 @@ class TerminalPairingTests(unittest.TestCase):
                 self.assertFalse(terminal_is_connected(actor))
                 pair_terminal(actor, code)
                 self.assertTrue(terminal_is_connected(actor))
+                if os.name == "posix":
+                    mode = stat.S_IMODE(grants.stat().st_mode)
+                    self.assertTrue(mode & stat.S_IRGRP)
+                    self.assertFalse(mode & (stat.S_IWGRP | stat.S_IRWXO))
                 with self.assertRaises(ValueError):
                     pair_terminal(other, code)
                 self.assertFalse(terminal_is_connected(other))

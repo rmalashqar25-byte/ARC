@@ -19,7 +19,10 @@ command -v docker >/dev/null
 docker compose version >/dev/null
 systemctl enable --now docker
 install -d -m 700 /etc/arc /var/lib/arc
-install -d -m 700 -o 10001 -g 10001 /var/lib/arc/data /var/lib/arc/data/projects /var/lib/arc/data/state /var/lib/arc/terminal
+install -d -m 700 -o 10001 -g 10001 /var/lib/arc/data /var/lib/arc/data/projects /var/lib/arc/data/state
+# The backend owns grant updates; the capability-free root broker reads group 0.
+# Setgid keeps atomically replaced grant files in the broker's read group.
+install -d -m 2750 -o 10001 -g 0 /var/lib/arc/terminal
 install -d -m 700 /var/lib/arc/caddy /var/lib/arc/caddy/data /var/lib/arc/caddy/config
 if [[ ! -e /etc/arc/provider.env ]]; then
   printf '%s\n' '# Provider credentials stay here or in each workspace encrypted vault.' > /etc/arc/provider.env
@@ -53,8 +56,8 @@ gateway.chmod(0o600)
 grants = Path('/var/lib/arc/terminal/grants.json')
 if not grants.exists():
     grants.write_text(json.dumps({'actors': [], 'paired': False}))
-os.chown(grants, 10001, 10001)
-grants.chmod(0o600)
+os.chown(grants, 10001, 0)
+grants.chmod(0o640)
 PY
 
 compose=(docker compose --env-file /etc/arc/deployment.env --file "$release_root/deploy/vultr/compose.yaml")

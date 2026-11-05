@@ -33,8 +33,8 @@ def main():
     state.pop("pairing_hash", None)
     temporary = path.with_suffix(".new")
     temporary.write_text(json.dumps(state))
-    os.chown(temporary, 10001, 10001)
-    temporary.chmod(0o600)
+    os.chown(temporary, 10001, 0)
+    temporary.chmod(0o640)
     temporary.replace(path)
     print("The specified workspace can now use the isolated terminal.")
 

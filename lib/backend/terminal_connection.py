@@ -103,6 +103,7 @@ def pair_terminal(actor_id, code):
             raise ValueError("Terminal setup is unavailable")
         temporary = path.with_suffix(".new")
         temporary.write_text(json.dumps(state), encoding="utf-8")
+        temporary.chmod(0o640)
         temporary.replace(path)
 
 
@@ -128,5 +129,6 @@ def auto_connect_terminal(actor_id):
         state.pop("pairing_hash", None)
         temporary = path.with_suffix(".new")
         temporary.write_text(json.dumps(state), encoding="utf-8")
+        temporary.chmod(0o640)
         temporary.replace(path)
         return True
