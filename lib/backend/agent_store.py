@@ -56,6 +56,9 @@ class AgentStore:
             "human_employees": self.human_employees,
             "human_tasks": self.human_tasks,
             "talent_profiles": self.talent_profiles,
+            "github_connections": [
+                [list(key), value] for key, value in self.connections.items()
+            ],
             "restrictions": [
                 [
                     list(key),
@@ -87,6 +90,10 @@ class AgentStore:
                 self._event_id = state["event_id"]
                 self.permissions = {
                     tuple(key): value for key, value in state.get("restrictions", [])
+                }
+                self.connections = {
+                    tuple(key): value
+                    for key, value in state.get("github_connections", [])
                 }
             self.work_store = database
             database.save_state(self.company_snapshot())
@@ -659,6 +666,7 @@ class AgentStore:
             item = self.oauth.pop(state_digest, None)
             return item[0] if item and item[1] > time.time() else None
 
+    @durable
     def save_github_connection(
         self,
         *,
@@ -691,6 +699,7 @@ class AgentStore:
                 key=lambda x: x["account_login"],
             )
 
+    @durable
     def delete_github_connection(self, actor_id, installation_id):
         with self._lock:
             return self.connections.pop((actor_id, installation_id), None) is not None
