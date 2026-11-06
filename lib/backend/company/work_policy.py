@@ -46,6 +46,11 @@ def model_gate(model):
     scope = WORK_SCOPE.get()
     if not scope:
         return
+    budget = scope.get("call_budget")
+    if budget is not None:
+        if budget["count"] >= budget["maximum"]:
+            raise ValueError("This assignment reached its model request limit")
+        budget["count"] += 1
     from company.model_catalog import catalog
 
     company = scope["database"].company(scope["actor"], scope["session"])

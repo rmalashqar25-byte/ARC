@@ -58,6 +58,38 @@ class CompanyWorker:
             return
         await asyncio.to_thread(self.database.recover_reviews)
         for parent in await asyncio.to_thread(self.database.reconcile_parents):
+            if parent["status"] == "completed" and parent.get("publish_repository"):
+                from company.delivery import publish_project
+
+                try:
+                    receipt = await publish_project(parent)
+                    self.database.execution_metadata(
+                        parent["actor"],
+                        parent["session"],
+                        parent["id"],
+                        delivery=receipt,
+                    )
+                    parent = self.database.update(
+                        parent["actor"],
+                        parent["session"],
+                        parent["id"],
+                        status="completed",
+                        result=parent["result"]
+                        + "\nGitHub: "
+                        + receipt["url"]
+                        + "\nCommit SHA: "
+                        + receipt["sha"],
+                        allowed={"completed"},
+                    )
+                except Exception:
+                    parent = self.database.update(
+                        parent["actor"],
+                        parent["session"],
+                        parent["id"],
+                        status="blocked",
+                        result="The team finished, but GitHub delivery failed. No push is claimed.",
+                        allowed={"completed"},
+                    )
             work_event(
                 parent,
                 "work_completed" if parent["status"] == "completed" else "work_blocked",
@@ -65,6 +97,11 @@ class CompanyWorker:
             )
         task = await asyncio.to_thread(self.database.claim)
         if task:
+            logging.getLogger("uvicorn.error").info(
+                "ARC execution stage=running task=%s assignee=%s",
+                task["id"],
+                task["assignee"],
+            )
             running = asyncio.create_task(self.process(task))
             self.active.add(running)
             running.add_done_callback(self.active.discard)
@@ -131,6 +168,31 @@ class CompanyWorker:
                         "blocked",
                         "The agent did not produce a verified passing terminal check. Review the result before continuing.",
                     )
+            if status == "completed" and task.get("publish_repository"):
+                from company.delivery import publish_project
+
+                try:
+                    receipt = await publish_project(task)
+                    self.database.execution_metadata(
+                        actor, session, task_id, delivery=receipt
+                    )
+                    message += (
+                        "\nGitHub: "
+                        + receipt["url"]
+                        + "\nCommit SHA: "
+                        + receipt["sha"]
+                    )
+                except (ValueError, RuntimeError, OSError) as error:
+                    status, message = (
+                        "blocked",
+                        "Files were processed, but GitHub delivery did not finish: "
+                        + str(error),
+                    )
+                except Exception:
+                    status, message = (
+                        "blocked",
+                        "GitHub delivery could not connect. The task is not marked published.",
+                    )
             current = self.database.get(actor, session, task_id)
             if current["status"] != "running":
                 return
@@ -155,6 +217,12 @@ class CompanyWorker:
         except asyncio.CancelledError:
             raise
         except Exception as error:
+            logging.getLogger("uvicorn.error").warning(
+                "ARC execution stage=failed task=%s error=%s http_status=%s",
+                task_id,
+                type(error).__name__,
+                getattr(error, "status_code", None),
+            )
             # No provider URLs, credentials, host paths, or raw errors in the feed.
             try:
                 previous = self.database.get(actor, session, task_id)
@@ -233,6 +301,10 @@ class CompanyWorker:
                 "database": self.database,
                 "task_id": task["id"],
                 "requires_check": task.get("requires_check", False),
+                "inline_delegation": task.get("autonomous_request", False),
+                "call_budget": {"count": 0, "maximum": 12}
+                if task.get("autonomous_request")
+                else None,
             }
         )
         try:
@@ -279,6 +351,17 @@ class CompanyWorker:
                 task["description"]
                 + "\nThis is a queued company task. Work only within the assigned project, verify your results with available tools, and report real completion, blockers, or missing information. Avoid unrelated messages."
             )
+            if task.get("autonomous_request"):
+                prompt += (
+                    "\nIMPLEMENT the requested working application now, not an architecture or a plan. "
+                    "The hired CTO can delegate synchronously to app_developer. Create actual project files "
+                    "using workspace_update with create_if_missing=true, old_text empty for new files, "
+                    "and relative paths. Create README.md with run instructions. For a calculator, deliver "
+                    "a working browser application with arithmetic, clear, decimals and error handling. "
+                    "Run a real available terminal check and report its actual result. Do not fabricate passing checks. "
+                    "GitHub delivery is handled by the control layer afterwards; do not call git_publish "
+                    "or claim a commit yourself. Use only the selected model and assigned workspace."
+                )
             if task["assignee"] == "ceo":
                 return await run_ceo_agent(
                     prompt, task["session"], actor_id=task["actor"]

@@ -132,3 +132,36 @@ def auto_connect_terminal(actor_id):
         temporary.chmod(0o640)
         temporary.replace(path)
         return True
+
+
+def restore_verified_terminal(actor_id):
+    """Restore the same verified GitHub identity, never an anonymous workspace."""
+    from agent_store import get_agent_store
+
+    store = get_agent_store()
+    current = store.list_github_connections(actor_id)
+    with _lock:
+        state = _state()
+        if actor_id in state.get("actors", []):
+            return True
+        if not state.get("actors") or len(state["actors"]) >= 16:
+            return False
+        with store._lock:
+            prior = list(store.connections.items())
+        same_owner = any(
+            old_actor in state["actors"]
+            and old.get("github_user_id")
+            and old.get("github_user_id") == new.get("github_user_id")
+            and installation == new.get("installation_id")
+            for (old_actor, installation), old in prior
+            for new in current
+        )
+        if not same_owner:
+            return False
+        state["actors"].append(actor_id)
+        path = _state_path()
+        temporary = path.with_suffix(".restore")
+        temporary.write_text(json.dumps(state), encoding="utf-8")
+        temporary.chmod(0o640)
+        temporary.replace(path)
+        return True

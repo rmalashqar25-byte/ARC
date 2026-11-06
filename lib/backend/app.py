@@ -511,6 +511,36 @@ async def github_callback(
             status_code=502, detail="GitHub returned no usable installation"
         )
 
+    from terminal_connection import restore_verified_terminal
+
+    restored = restore_verified_terminal(arc_user_id)
+    if restored:
+        from company.delivery import execution_request
+
+        store = get_agent_store()
+        with store._lock:
+            pending = [
+                (key[2], value)
+                for key, value in store.sessions.items()
+                if key[0] == arc_user_id
+                and key[1] == "execution_request"
+                and isinstance(value, dict)
+                and value.get("pending")
+            ]
+        if pending:
+            project, intent = max(
+                pending, key=lambda item: item[1].get("requested_at", 0)
+            )
+            try:
+                await execution_request(
+                    intent["brief"], [], arc_user_id, project, store.work_store
+                )
+            except Exception as error:
+                logger.warning(
+                    "Saved build could not resume after GitHub connection: %s",
+                    type(error).__name__,
+                )
+
     return HTMLResponse(
         """
         <html>

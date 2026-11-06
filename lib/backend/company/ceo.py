@@ -421,6 +421,40 @@ async def run_ceo_agent(
         messages.append({"role": "user", "content": clean_prompt})
         _trim_session(messages)
 
+        from company.delivery import execution_request
+
+        delivery = await execution_request(
+            clean_prompt,
+            messages,
+            clean_actor_id,
+            clean_session_id,
+            get_agent_store().work_store,
+        )
+        if delivery is not None:
+            from company.team import get_team
+
+            final_message = protect_agent_text(delivery["message"])
+            messages.append({"role": "assistant", "content": final_message})
+            _trim_session(messages)
+            get_agent_store().save_session(
+                clean_actor_id, "ceo", clean_session_id, messages
+            )
+            record_ceo_response(clean_actor_id, clean_session_id, final_message)
+            return {
+                "agent_id": "ceo",
+                "delegations": [],
+                "pending_approvals": [],
+                "team": get_team(clean_actor_id, clean_session_id),
+                "groups": company_groups(clean_actor_id, clean_session_id),
+                "events": company_events(
+                    clean_actor_id,
+                    clean_session_id,
+                    after_id=max(int(request_event["id"]) - 1, 0),
+                ),
+                **delivery,
+                "message": final_message,
+            }
+
         normalized = " ".join(clean_prompt.casefold().strip(" !.,?؟").split())
         from company.work_policy import WORK_SCOPE
 
@@ -633,7 +667,8 @@ async def run_ceo_agent(
                 if proposed:
                     team = save_team(clean_actor_id, clean_session_id, "ceo", proposed)
             except (ValueError, TypeError, AttributeError, StopIteration):
-                delegations = []
+                if not team["members"]:
+                    delegations = []
                 plan_message = "I couldn’t finalize your team. Please review your choices in the marketplace and try again."
         if team["mode"] != "undecided":
             hired = {m["role_id"] for m in team["members"]}

@@ -945,18 +945,21 @@ async def _delegate_agent(
             + ", ".join(allowed)
         )
 
+    from company.work_policy import WORK_SCOPE
     from company.work_runtime import queue_delegation
 
-    queued = queue_delegation(
-        context.actor_id,
-        context.session_id,
-        agent_id,
-        task,
-        manager=context.role,
-        group_id=context.company_group_id,
-    )
-    if queued is not None:
-        return queued
+    scope = WORK_SCOPE.get()
+    if not (scope and scope.get("inline_delegation")):
+        queued = queue_delegation(
+            context.actor_id,
+            context.session_id,
+            agent_id,
+            task,
+            manager=context.role,
+            group_id=context.company_group_id,
+        )
+        if queued is not None:
+            return queued
     return await run_company_agent(
         agent_id=agent_id,
         prompt=task,

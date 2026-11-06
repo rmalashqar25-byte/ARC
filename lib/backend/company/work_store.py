@@ -354,6 +354,32 @@ class WorkStore:
                 continue
         return changed
 
+    def execution_metadata(
+        self, actor, session, task_id, *, repository=None, delivery=None
+    ):
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute(
+                "SELECT body FROM tasks WHERE id=? AND actor=? AND session=?",
+                (task_id, actor, session),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Task not found")
+            body = json.loads(row["body"])
+            if delivery is not None:
+                body["delivery"] = delivery
+            else:
+                body.update(
+                    autonomous_request=True,
+                    publish_repository=repository,
+                    requires_check=True,
+                )
+            db.execute(
+                "UPDATE tasks SET body=?, updated=? WHERE id=?",
+                (json.dumps(body), time.time(), task_id),
+            )
+        return self.get(actor, session, task_id)
+
     def invitation(self, actor, session, employee):
         token = secrets.token_urlsafe(32)
         with self.connection() as db:
