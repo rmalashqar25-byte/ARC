@@ -11,9 +11,11 @@ class CompanyLiveActivity extends StatefulWidget {
     required this.api,
     required this.sessionId,
     this.onClose,
+    this.initialGroupId,
   });
   final CompanyApiClient api;
   final String sessionId;
+  final String? initialGroupId;
   final VoidCallback? onClose;
   @override
   State<CompanyLiveActivity> createState() => _CompanyLiveActivityState();
@@ -33,6 +35,7 @@ class _CompanyLiveActivityState extends State<CompanyLiveActivity> {
   @override
   void initState() {
     super.initState();
+    _selectedGroupId = widget.initialGroupId;
     _load();
   }
 
@@ -46,7 +49,7 @@ class _CompanyLiveActivityState extends State<CompanyLiveActivity> {
       _generation++;
       _connected = false;
       _error = null;
-      _selectedGroupId = null;
+      _selectedGroupId = widget.initialGroupId;
       _events.clear();
       _groups = const [];
       _loading = true;

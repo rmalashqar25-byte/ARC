@@ -1,5 +1,5 @@
 FROM alpine:3.24.3
-RUN apk add --no-cache python3 py3-pytest git ripgrep
+RUN apk add --no-cache python3 py3-pytest git ripgrep nodejs
 COPY runner.py /opt/arc/runner.py
 USER 65534:65534
 WORKDIR /workspace

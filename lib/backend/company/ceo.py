@@ -418,6 +418,40 @@ async def run_ceo_agent(
 
         from company.delivery import execution_request
 
+        if clean_prompt.strip().lower() in {
+            "help me build a company. choose the team for me.",
+            "choose my team",
+            "choose the team",
+        }:
+            from developer_connections import connection
+
+            from company.team import save_team
+
+            own = connection(clean_actor_id)
+            if own:
+                save_team(
+                    clean_actor_id,
+                    clean_session_id,
+                    "ceo",
+                    [
+                        {"agent_id": own["model"], "role_id": role}
+                        for role in ("cto", "app_developer")
+                    ],
+                )
+                message = "Your CTO and application developer are selected. Tell me what you want to build."
+                messages.append({"role": "assistant", "content": message})
+                get_agent_store().save_session(
+                    clean_actor_id, "ceo", clean_session_id, messages
+                )
+                record_ceo_response(clean_actor_id, clean_session_id, message)
+                return {
+                    "message": message,
+                    "delegations": [],
+                    "pending_approvals": [],
+                    "groups": company_groups(clean_actor_id, clean_session_id),
+                    "events": [],
+                }
+
         delivery = await execution_request(
             clean_prompt,
             messages,
@@ -477,7 +511,11 @@ async def run_ceo_agent(
                 if t["status"] in {"queued", "running", "waiting_team"}
             ]
         )
-        if pending and normalized in nudges and WORK_SCOPE.get() is None:
+        if (
+            pending
+            and normalized in nudges
+            and (not WORK_SCOPE.get() or WORK_SCOPE.get().get("interactive"))
+        ):
             paused = not database.company(clean_actor_id, clean_session_id)["enabled"]
             message = (
                 "Your task is already saved. Automatic work is paused. Use **Start queued work** below to enable it. "

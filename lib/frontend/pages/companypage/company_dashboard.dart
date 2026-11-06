@@ -1,3 +1,4 @@
+import 'package:arc/frontend/company_live_activity.dart';
 import 'work_board.dart';
 import 'package:arc/frontend/user_messages.dart';
 import 'package:arc/api_config.dart';
@@ -229,9 +230,30 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
                     _EmptyGroups()
                   else
                     ..._groups.map(
-                      (group) => _GroupSummaryCard(
-                        group: group,
-                        agentName: _agentName,
+                      (group) => Semantics(
+                        button: true,
+                        label: 'Open ${group.name} live work',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => Scaffold(
+                                appBar: AppBar(
+                                  title: Text('${group.name} · Live work'),
+                                ),
+                                body: CompanyLiveActivity(
+                                  api: _api,
+                                  sessionId: _sessionId,
+                                  initialGroupId: group.id,
+                                ),
+                              ),
+                            ),
+                          ),
+                          child: _GroupSummaryCard(
+                            group: group,
+                            agentName: _agentName,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -308,7 +330,7 @@ class _GroupSummaryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${group.members.length} members',
+                  '${group.members.length} members · Open →',
                   style: const TextStyle(color: Color(0xFF8F8F8F)),
                 ),
               ],

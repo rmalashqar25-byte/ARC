@@ -138,6 +138,10 @@ def default_connection():
     return None
 
 
+class ModelGenerationUnavailable(RuntimeError):
+    public_message = "The model services could not finish generating this project. No completed build or GitHub push is confirmed. Your task and any saved files are preserved; retry when a model is available."
+
+
 _provider_retry_after = {}
 
 
@@ -153,18 +157,30 @@ def create_completion(value, token_limit, **kwargs):
         ):
             continue
         try:
+            request = dict(kwargs)
+            request["extra_body"] = (
+                {"reasoning": {"enabled": False}} if provider == "openrouter" else {}
+            )
             with model_client(candidate) as client:
                 response = client.with_options(
-                    timeout=300 if provider == "vultr_model" else 25
+                    timeout=180 if provider == "vultr_model" else 60
                 ).chat.completions.create(
                     model=candidate["model"],
                     **completion_options(candidate, token_limit),
-                    **kwargs,
+                    **request,
                 )
                 if not response.choices or not (
                     response.choices[0].message.content
                     or response.choices[0].message.tool_calls
                 ):
+                    logging.getLogger("uvicorn.error").warning(
+                        "Empty model response provider=%s finish=%s usage=%s",
+                        provider,
+                        response.choices[0].finish_reason
+                        if response.choices
+                        else "no_choices",
+                        response.usage.model_dump() if response.usage else None,
+                    )
                     raise ValueError("Empty model response")
                 return response
         except Exception as error:
@@ -184,7 +200,7 @@ def create_completion(value, token_limit, **kwargs):
                 provider,
                 status or type(error).__name__,
             )
-    raise RuntimeError(
+    raise ModelGenerationUnavailable(
         "Configured model providers are temporarily unavailable"
     ) from last_error
 
@@ -326,7 +342,7 @@ def completion_options(value, token_limit):
     if value["provider"] in {"ollama", "vultr_model"}:
         options["reasoning_effort"] = "none"
     if value.get("server_managed") or value["provider"] == "vultr_model":
-        options["max_tokens"] = min(token_limit, 2048)
+        options["max_tokens"] = min(token_limit, 8192)
     return options
 
 

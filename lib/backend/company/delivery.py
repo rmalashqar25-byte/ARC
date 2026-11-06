@@ -48,7 +48,8 @@ async def _execution_request(prompt, messages, actor, session, database):
     from company.team import get_team, marketplace, save_team
     from company.work_policy import WORK_SCOPE, model_prices
 
-    if database is None or WORK_SCOPE.get() is not None:
+    scope = WORK_SCOPE.get()
+    if database is None or (scope and not scope.get("interactive")):
         return None
     text = " ".join(prompt.lower().split())
     tasks = database.list(actor, session)
@@ -73,7 +74,18 @@ async def _execution_request(prompt, messages, actor, session, database):
         and (
             any(
                 w in text
-                for w in ("push it", "pushed", "status", "is it done", "any updates")
+                for w in (
+                    "push it",
+                    "pushed",
+                    "status",
+                    "is it done",
+                    "any updates",
+                    "where it",
+                    "where is it",
+                    "what happened",
+                    "why stopped",
+                    "why blocked",
+                )
             )
             or (
                 re.search(r"\b(can|could|did|have|do)\b", text)
@@ -106,7 +118,11 @@ async def _execution_request(prompt, messages, actor, session, database):
                 "Not pushed yet. Task status: "
                 + latest["status"]
                 + ". "
-                + (latest.get("result") or "The assignment has not finished.")
+                + (
+                    latest.get("result")
+                    or latest.get("feedback")
+                    or "The assignment has not finished."
+                )
             )
         )
         return {

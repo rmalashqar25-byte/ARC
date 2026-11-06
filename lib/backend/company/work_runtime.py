@@ -41,7 +41,17 @@ def work_event(task, kind, message):
     get_agent_store().append_company_event(
         actor_id=task["actor"],
         session_id=task["session"],
-        group_id=None,
+        group_id=task.get("group_id")
+        or next(
+            (
+                g["group_id"]
+                for g in get_agent_store().list_company_groups(
+                    task["actor"], task["session"]
+                )
+                if g["director_id"] == task["assignee"]
+            ),
+            None,
+        ),
         sender_id=task["manager"],
         recipient_id="user",
         event_type=kind,
@@ -245,6 +255,9 @@ class CompanyWorker:
                 previous = self.database.get(actor, session, task_id)
             except ValueError:
                 return
+            from developer_connections import ModelGenerationUnavailable
+
+            generation_failed = isinstance(error, ModelGenerationUnavailable)
             quota = str(error) == "Company daily model request limit reached"
             rate_limit = getattr(error, "status_code", None) in {402, 429}
             retry = (
@@ -256,7 +269,9 @@ class CompanyWorker:
                 )
             )
             message = (
-                "The daily model request limit is used. Work will resume on the next UTC day."
+                ModelGenerationUnavailable.public_message
+                if generation_failed
+                else "The daily model request limit is used. Work will resume on the next UTC day."
                 if quota
                 else "The model service is rate limited. Work will retry later."
                 if rate_limit
@@ -325,6 +340,10 @@ class CompanyWorker:
             }
         )
         try:
+            if task.get("autonomous_request") and task["kind"] == "agent":
+                from company.artifacts import build_project
+
+                return await build_project(task)
             if task["kind"] == "review":
                 parent = self.database.get(
                     task["actor"], task["session"], task["parent"]

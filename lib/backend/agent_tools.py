@@ -176,6 +176,39 @@ def _audit(event: str, context: ToolContext, tool_name: str, **details: Any) -> 
     ):
         record["work_task_id"] = scope.get("task_id")
     get_agent_store().append_audit(record)
+    if (
+        context.company_group_id
+        and event in {"tool_completed", "tool_failed"}
+        and tool_name in {"workspace_update", "terminal_run"}
+    ):
+        result = details.get("result", {})
+        if tool_name == "workspace_update":
+            message = (
+                "Wrote " + str(result.get("path", "project file"))
+                if event == "tool_completed"
+                else "File update failed."
+            )
+        else:
+            exit_code = result.get("result", {}).get("exit_code")
+            message = (
+                "Isolated project check finished. Exit code: " + str(exit_code)
+                if event == "tool_completed"
+                else "Isolated project check could not run."
+            )
+        get_agent_store().append_company_event(
+            actor_id=context.actor_id,
+            session_id=context.session_id,
+            group_id=context.company_group_id,
+            sender_id=context.role,
+            recipient_id="cto",
+            event_type="tool_progress",
+            content=message,
+            metadata={
+                "tool": tool_name,
+                "status": event,
+                "work_task_id": record.get("work_task_id"),
+            },
+        )
 
 
 def get_audit_events(
