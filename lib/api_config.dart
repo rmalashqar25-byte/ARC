@@ -1,5 +1,6 @@
 import 'package:arc/workspace_identity.dart';
 import 'package:arc/workspace_storage.dart' as storage;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConfig {
   static final _identity = WorkspaceIdentity(
@@ -26,7 +27,9 @@ class ApiConfig {
           : resolved;
     }
 
-    return 'https://arc1-backend.nicesmoke-c99e1085.spaincentral.azurecontainerapps.io';
+    return kIsWeb
+        ? Uri.base.resolve('/api').toString().replaceFirst(RegExp(r'/$'), '')
+        : 'https://arc1-backend.nicesmoke-c99e1085.spaincentral.azurecontainerapps.io';
   }
 
   static Uri endpoint(String path, [Map<String, String>? queryParameters]) {
