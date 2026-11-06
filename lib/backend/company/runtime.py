@@ -293,7 +293,12 @@ async def run_company_agent(
                     "job_title": profile.job_title,
                     "provider": profile.provider,
                     "model": active_model,
-                    "message": report,
+                    "message": report.removeprefix("NEEDS_INPUT:").strip(),
+                    **(
+                        {"status": "blocked", "reason": "needs_input"}
+                        if report.startswith("NEEDS_INPUT:")
+                        else {}
+                    ),
                     "group_id": active_group_id,
                     "pending_approvals": [],
                 }

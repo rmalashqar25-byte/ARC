@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:arc/frontend/pages/companypage/work_board.dart';
 import 'package:arc/api_config.dart';
 import 'package:arc/frontend/arc_design.dart';
@@ -35,6 +36,73 @@ class _AipageState extends State<AiPage> {
   bool _isSending = false;
   String? _pausedWorkSession;
   bool _showActivity = false;
+  Timer? _ceoUpdates;
+  bool _loadingCeoUpdates = false;
+  final Map<String, int> _ceoUpdateCursors = {};
+
+  Future<void> _loadCeoUpdates() async {
+    if (_loadingCeoUpdates || _isSending) return;
+    _loadingCeoUpdates = true;
+    final session = id.isEmpty ? ApiConfig.companySessionId : id;
+    final activeChat = chat;
+    try {
+      final page = await _activityApi.loadEvents(
+        session,
+        afterId: _ceoUpdateCursors[session] ?? 0,
+      );
+      if (!mounted ||
+          session != (id.isEmpty ? ApiConfig.companySessionId : id) ||
+          !identical(chat, activeChat))
+        return;
+      final important = page.events.where(
+        (event) => {
+          'work_completed',
+          'work_blocked',
+          'work_retry',
+          'company_paused',
+          'company_resumed',
+        }.contains(event.type),
+      );
+      setState(() {
+        for (final event in important) {
+          String text;
+          if (event.type == 'work_completed') {
+            final title =
+                event.metadata['title']?.toString() ?? 'Assigned work';
+            text = '**Work update**\n\nThe team finished: $title.';
+            final delivery = event.metadata['delivery'];
+            if (delivery is Map && delivery['sha'] != null) {
+              final uri = Uri.tryParse(delivery['url']?.toString() ?? '');
+              if (uri != null &&
+                  uri.scheme == 'https' &&
+                  uri.host == 'github.com' &&
+                  uri.userInfo.isEmpty) {
+                text +=
+                    '\n\n[Open the GitHub delivery]($uri)\n\nCommit: `${delivery['sha']}`';
+              }
+            } else {
+              text += '\n\nNo GitHub push is confirmed in this update.';
+            }
+          } else {
+            final heading = event.type == 'work_blocked'
+                ? 'Your attention is needed'
+                : event.type == 'work_retry'
+                ? 'Work is waiting'
+                : event.type == 'company_paused'
+                ? 'Company work paused'
+                : 'Company work resumed';
+            text = '**$heading**\n\n${event.content}';
+          }
+          activeChat.add(Chatmessage(text: text, isAI: true));
+        }
+        _ceoUpdateCursors[session] = page.nextAfterId;
+      });
+    } catch (_) {
+      // A feed reconnect is not evidence that the company worker paused.
+    } finally {
+      _loadingCeoUpdates = false;
+    }
+  }
 
   String id = "";
   final CompanyApiClient _activityApi = CompanyApiClient();
@@ -43,6 +111,11 @@ class _AipageState extends State<AiPage> {
   void initState() {
     super.initState();
     _connectLocalTerminal();
+    _loadCeoUpdates();
+    _ceoUpdates = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadCeoUpdates(),
+    );
   }
 
   Future<void> _connectLocalTerminal() async {
@@ -64,6 +137,7 @@ class _AipageState extends State<AiPage> {
 
   @override
   void dispose() {
+    _ceoUpdates?.cancel();
     controller.dispose();
     _activityApi.close();
     super.dispose();

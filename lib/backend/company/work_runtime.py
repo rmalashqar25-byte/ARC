@@ -32,6 +32,12 @@ def work_models():
 def work_event(task, kind, message):
     from company.communication import protect_agent_text
 
+    metadata = {"work_task_id": task["id"], "title": task.get("title", "Assigned work")}
+    database = get_agent_store().work_store
+    if kind == "work_completed" and database:
+        current = database.get(task["actor"], task["session"], task["id"])
+        if current.get("delivery"):
+            metadata["delivery"] = current["delivery"]
     get_agent_store().append_company_event(
         actor_id=task["actor"],
         session_id=task["session"],
@@ -40,7 +46,7 @@ def work_event(task, kind, message):
         recipient_id="user",
         event_type=kind,
         content=protect_agent_text(message),
-        metadata={"work_task_id": task["id"]},
+        metadata=metadata,
     )
 
 
@@ -360,7 +366,7 @@ class CompanyWorker:
                 }
             prompt = (
                 task["description"]
-                + "\nThis is a queued company task. Work only within the assigned project, verify your results with available tools, and report real completion, blockers, or missing information. Avoid unrelated messages."
+                + "\nThis is a queued company task. Work only within the assigned project, verify your results with available tools, and report real completion, blockers, or missing information. Avoid unrelated messages. If a specific founder decision blocks execution, begin your final reply with NEEDS_INPUT: and ask the one necessary question."
             )
             if task.get("autonomous_request"):
                 prompt += (

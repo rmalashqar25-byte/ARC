@@ -168,13 +168,27 @@ def build_work_router(access_dependency):
 
             if get_team(actor, project_id)["mode"] == "undecided":
                 save_team(actor, project_id, "ceo", [])
-        return database().configure(
+        configured = database().configure(
             actor,
             session_id(project_id),
             request.enabled,
             request.model,
             price_limits=limits,
         )
+        if bool(existing["enabled"]) != request.enabled:
+            get_agent_store().append_company_event(
+                actor_id=actor,
+                session_id=project_id,
+                group_id=None,
+                sender_id="ceo",
+                recipient_id="user",
+                event_type="company_resumed" if request.enabled else "company_paused",
+                content="Automatic company work is running. I’ll report results or blockers here."
+                if request.enabled
+                else "Automatic company work is paused. Saved tasks remain available; resume them in Company work.",
+                metadata={},
+            )
+        return configured
 
     @router.post("/company/sessions/{project_id}/work/tasks", status_code=201)
     def create(
