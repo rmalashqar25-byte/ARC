@@ -62,7 +62,9 @@ class CompanyWorker:
                 from company.delivery import publish_project
 
                 try:
-                    receipt = await publish_project(parent)
+                    receipt = await asyncio.wait_for(
+                        publish_project(parent), timeout=30
+                    )
                     self.database.execution_metadata(
                         parent["actor"],
                         parent["session"],
@@ -172,7 +174,7 @@ class CompanyWorker:
                 from company.delivery import publish_project
 
                 try:
-                    receipt = await publish_project(task)
+                    receipt = await asyncio.wait_for(publish_project(task), timeout=30)
                     self.database.execution_metadata(
                         actor, session, task_id, delivery=receipt
                     )

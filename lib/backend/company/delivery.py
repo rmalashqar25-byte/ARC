@@ -341,6 +341,12 @@ def _jwt():
 async def publish_project(task):
     from agent_tools import _is_sensitive_path, _workspace_root
 
+    database = get_agent_store().work_store
+    if (
+        database is None
+        or not database.company(task["actor"], task["session"])["enabled"]
+    ):
+        raise ValueError("Company work was paused before GitHub delivery")
     target = repository_for(task["actor"])
     if not target or target[0] != task.get("publish_repository"):
         raise ValueError("GitHub is not connected to this workspace and repository")
@@ -502,7 +508,9 @@ async def publish_project(task):
             if token:
                 try:
                     await client.delete(
-                        "https://api.github.com/installation/token", headers=headers
+                        "https://api.github.com/installation/token",
+                        headers=headers,
+                        timeout=3,
                     )
                 except httpx.HTTPError:
                     LOG.warning(
