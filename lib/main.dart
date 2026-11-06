@@ -1,9 +1,16 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:arc/frontend/pages/ai_page.dart';
 import 'package:flutter/material.dart';
 import 'package:arc/frontend/pages/human_work_portal.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks([
+      'ARC',
+    ], await rootBundle.loadString('assets/legal/ARC-LICENSE.txt'));
+  });
   runApp(const MyApp());
 }
 

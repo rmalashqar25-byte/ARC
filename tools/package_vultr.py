@@ -13,6 +13,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def release_files(web):
+    for name in ("LICENSE", "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_LICENSES.txt"):
+        path = ROOT / name
+        yield path, name
     backend = ROOT / "lib/backend"
     for path in sorted(backend.glob("*.py")):
         if not path.name.startswith("test_"):

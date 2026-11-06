@@ -1,5 +1,7 @@
 # ARC
 
+[MIT licensed](LICENSE) · [Live demo](https://arc.64.177.59.174.sslip.io/) · [Judge walkthrough](docs/JUDGES.md) · [Hackathon audit](docs/HACKATHON.md)
+
 ![ARC: a company workspace for real work](docs/assets/arc-hackathon-cover.png)
 
 ## Vultr deployment
@@ -11,6 +13,18 @@ The services used, deployment architecture, execution workflow, containment chec
 **[Vultr installation guide](deploy/vultr/README.md)** includes the production configuration, release packaging, HTTPS setup, persistent storage, and private execution service. Build web with `--dart-define=ARC_API_BASE_URL=/api` for this deployment. No developer credentials or local company data are included in a release.
 
 A company workspace for developing an idea, assembling a team, and following its work.
+
+## Who ARC helps
+
+A small founder-led team often loses work between chats, specialists, and freelancers. ARC gives the founder one CEO conversation, manager-owned assignments, a quiet queue, and a restricted job portal for human employees. People see their assigned work rather than internal agent conversations. Human capacity prevents over-allocation. A scheduler checks for actual work every five seconds without spending model tokens while idle.
+
+The initial use case is a small product team shipping bounded fixes and reviewing contractor deliverables. Potential revenue is a hosted workspace subscription with bring-your-own model keys; payments, customer pilots and revenue are not implemented or claimed. Marketplace prices are illustrations, not provider subscriptions. The next validation is a small founder-team pilot measuring task completion, intervention rate and cost per verified job.
+
+## Open-source licensing and provenance
+
+ARC's original source and documentation are [MIT licensed](LICENSE). Preserve the license and [third-party notices](THIRD_PARTY_NOTICES.md) when redistributing. The running app exposes Flutter's generated license bundle in Workspace settings. API providers and hosted models retain their own service terms; model weights are not bundled.
+
+ARC existed before this event. [PROVENANCE.md](PROVENANCE.md) distinguishes that foundation from the Vultr deployment and reliability work completed during the hackathon. The public repository's initial import date is not a claim that all code was newly written then.
 
 ## Project layout
 

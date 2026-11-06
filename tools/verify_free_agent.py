@@ -41,6 +41,15 @@ def main():
         action="store_true",
         help="Verify the durable company worker and default approvals",
     )
+    parser.add_argument(
+        "--gateway-config",
+        type=Path,
+        default=ROOT / ".arc/terminal-runtime/gateway.json",
+    )
+    parser.add_argument("--report", type=Path)
+    parser.add_argument(
+        "--max-model-requests", type=int, default=16, choices=range(1, 17)
+    )
     args = parser.parse_args()
     model = args.model
     if not model.endswith(":free"):
@@ -66,7 +75,7 @@ def main():
             "Configure OpenRouter locally first; do not put credentials in arguments."
         )
 
-    settings = json.loads((ROOT / ".arc/terminal-runtime/gateway.json").read_text())
+    settings = json.loads(args.gateway_config.read_text())
     grants = json.loads(Path(settings["grants_file"]).read_text())
     actors = grants.get("actors", [])
     if not actors:
@@ -122,7 +131,7 @@ def main():
         if payload.get("model") != model or payload.get("models"):
             raise RuntimeError("Unapproved model or fallback blocked")
         with gate:
-            if len(calls) >= 16:
+            if len(calls) >= args.max_model_requests:
                 raise RuntimeError("Live verification request budget exhausted")
             calls.append({"requested_model": model})
             return len(calls) - 1
@@ -196,7 +205,7 @@ def main():
         "provider_calls": calls,
         "checks": {},
     }
-    output = ROOT / (
+    output = args.report or ROOT / (
         ".arc/security/company-worker-verification.json"
         if args.background
         else ".arc/security/free-agent-verification.json"

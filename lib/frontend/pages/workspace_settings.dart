@@ -405,6 +405,27 @@ class _WorkspaceSettingsPageState extends State<WorkspaceSettingsPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 14),
+            _SettingsCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const _SettingsIcon(
+                  Icons.description_outlined,
+                  arcLilac,
+                ),
+                title: const Text('Open-source licenses'),
+                subtitle: const Text(
+                  'ARC is MIT licensed. View dependency notices.',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'ARC',
+                  applicationLegalese:
+                      'Copyright 2026 ARC contributors. MIT License.',
+                ),
+              ),
+            ),
             const SizedBox(height: 28),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(

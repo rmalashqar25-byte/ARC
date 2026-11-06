@@ -1,4 +1,4 @@
-# Pinned backend dependencies. Provider vault pins aligned on 2026-10-31.
+# Complete backend runtime pins, verified on Vultr on 2026-11-05.
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
@@ -23,3 +23,8 @@ uvicorn==0.52.4
 cryptography==50.0.2
 cffi==2.1.1
 pycparser==3.11
+
+# Transitive runtime dependencies pinned for reproducible installs.
+certifi==2026.10.23
+idna==3.20
+typing_extensions==4.16.0

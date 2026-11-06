@@ -48,6 +48,9 @@ class GatewayPlatformTests(unittest.TestCase):
 class ReleasePrivacyTests(unittest.TestCase):
     def prepare(self, root):
         for name in (
+            "LICENSE",
+            "THIRD_PARTY_NOTICES.md",
+            "THIRD_PARTY_LICENSES.txt",
             "lib/backend/company/__init__.py",
             "lib/backend/app.py",
             "lib/backend/requirements.lock",
@@ -83,6 +86,8 @@ class ReleasePrivacyTests(unittest.TestCase):
                 names = archive.getnames()
                 self.assertIn("web-build/main.dart.js", names)
                 self.assertIn("release-manifest.json", names)
+                self.assertIn("LICENSE", names)
+                self.assertIn("THIRD_PARTY_LICENSES.txt", names)
                 self.assertNotIn(".env", names)
                 self.assertFalse(
                     any(

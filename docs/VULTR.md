@@ -10,7 +10,7 @@ Public demo: **[Open ARC](https://arc.64.177.59.174.sslip.io/)**. The applicatio
 
 Verified on the running Vultr VM: frontend assets and public API routing; a missing session capability is rejected; API documentation and detailed readiness routes return 404 publicly; four real execution isolation checks and one timeout/cleanup check pass. Provider credentials remain outside Git and outside execution containers. A real Gemini CEO reply through the public ARC API and a zero-price OpenRouter inference request from the deployed backend both succeeded. A recorded technical demo and full delegated company-job evidence remain separate submission tasks.
 
-Recommended challenge: **Powering the Future of Work**, because ARC coordinates ongoing company jobs, AI roles, and human deliverables. The challenge selection remains the team's decision. **Blast Radius Zero** is an alternative that adds stricter inference and execution requirements.
+Selected submission scope: **Powering the Future of Work**, because ARC coordinates ongoing company jobs, AI roles, and human deliverables. **Blast Radius Zero** is an alternative that adds stricter inference and execution requirements.
 
 The organizer currently lists the online build as **3-8 November 2026**. Recheck the [official event page](https://lablab.ai/ai-hackathons/vultr-hackathon) before submitting.
 
@@ -29,7 +29,7 @@ ARC also supports finance, operations, marketing, and legal roles. These are sof
 - Human employee capacity, accept/decline, submission, manager review, and revocable invitations.
 - Restricted local terminal execution on disposable Docker project copies.
 - Local verification of a real code change, a passing agent test, and an independent passing test.
-- 149 backend tests and 41 Flutter tests passed during the latest local verification.
+- 157 backend tests and 41 Flutter tests passed during the latest local verification.
 
 Marketplace role prices are demo values. Model provider charges are separate. Automatic work has a request-count limit, not a guaranteed currency spending cap.
 
@@ -139,13 +139,15 @@ For Challenge 1, record this after the execution service is running on Vultr. An
 
 ## Submission checklist
 
-- [ ] Confirm the selected challenge.
+- [x] Target Challenge 2: Powering the Future of Work.
 - [x] Public repository contains the current source, setup instructions, and this Vultr explanation.
 - [x] Backend and web application run on Vultr, with an actual public HTTPS URL.
 - [x] Record the Vultr services, region, and deployment evidence accurately.
 - [ ] Record a technical demo showing an actual task and its result.
 - [ ] If entering Challenge 1, enforce Vultr inference and show a containment moment on Vultr.
 - [x] Prepare a PDF slide deck and cover artwork.
+- [x] Submit the existing ARC promo, PDF and live URL on lablab on 5 November.
+- [x] Add MIT licensing and preserve third-party notices.
 - [ ] Recheck that no secrets, personal invitations, or internal credentials appear in screenshots or Git history.
 
 ## Sources
@@ -154,4 +156,4 @@ For Challenge 1, record this after the execution service is running on Vultr. An
 - [Vultr event overview and containment requirements](https://community.vultr.com/e/vultr-agent-rush-hackathon)
 - Repository implementation: `company/work_runtime.py`, `company/work_store.py`, `company/work_policy.py`, `developer_connections.py`, `services/terminal_gateway.py`, and `terminal_policy.py`.
 
-Requirements checked on 31 October 2026. Recheck the organizer's current rules at submission time.
+Requirements checked on 5 November 2026. Recheck the organizer's current rules at submission time.
