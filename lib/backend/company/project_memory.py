@@ -55,7 +55,10 @@ def read(actor, session):
     notes = [dict(row) for row in reversed(rows)]
     existing = {row["note_key"] for row in notes}
     # Older projects gain memory from durable task records without model calls.
-    for task in reversed(db.list(actor, session)[:8]):
+    tasks = db.list(actor, session)[:8]
+    if tasks and not any(note["kind"] == "goal" for note in notes):
+        notes.append({"kind": "goal", "content": _clean(tasks[-1].get("description"))})
+    for task in reversed(tasks):
         if "task:" + task["id"] not in existing:
             notes.append({"kind": "task", "content": _clean(task.get("description"))})
         if task["status"] in {"completed", "blocked"}:
@@ -64,6 +67,11 @@ def read(actor, session):
                 value = _clean(task.get("result") or task.get("feedback"))
                 if value:
                     notes.append({"kind": kind, "content": value})
+    if not any(note["kind"] == "lesson" for note in notes):
+        events = get_agent_store().list_company_events(actor, session, limit=500)
+        for event in events[-100:]:
+            if event["event_type"] == "work_blocked":
+                notes.append({"kind": "lesson", "content": _clean(event["content"], 500)})
     return _render(notes)
 
 
