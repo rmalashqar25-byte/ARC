@@ -19,6 +19,8 @@ command -v docker >/dev/null
 docker compose version >/dev/null
 systemctl enable --now docker
 install -d -m 700 /etc/arc /var/lib/arc
+# Explicitly public, separately mounted media; never mount private state here.
+install -d -m 755 /var/lib/arc/public-media
 install -d -m 700 -o 10001 -g 10001 /var/lib/arc/data /var/lib/arc/data/projects /var/lib/arc/data/state
 # The backend owns grant updates; the capability-free root broker reads group 0.
 # Setgid keeps atomically replaced grant files in the broker's read group.

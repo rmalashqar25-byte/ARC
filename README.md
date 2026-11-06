@@ -16,6 +16,14 @@ A company workspace for developing an idea, assembling a team, and following its
 
 **[Real Vultr workflow evidence](docs/evidence/vultr-company-task.json):** the company queue delegated a synthetic discount bug, the agent changed the code without changing its tests, and an independent container rerun passed. Eight free-model requests reported zero cost. This is recorded test evidence, not a claim that every user task succeeds.
 
+## Watch ARC
+
+[![Watch the two-minute technical walkthrough](docs/assets/arc-technical-demo.png)](https://arc.64.177.59.174.sslip.io/demo/)
+
+**[Two-minute technical video](https://arc.64.177.59.174.sslip.io/demo/)** · **[PDF slides with a clickable video preview](docs/assets/ARC-Hackathon-Deck.pdf)** · **[Original promo](https://arc.64.177.59.174.sslip.io/demo/#promo)**
+
+The technical walkthrough uses actual deployed UI captures and recorded synthetic task evidence. It is not a continuous live browser recording. The original promotional film remains separate and unchanged.
+
 ## Who ARC helps
 
 A small founder-led team often loses work between chats, specialists, and freelancers. ARC gives the founder one CEO conversation, manager-owned assignments, a quiet queue, and a restricted job portal for human employees. People see their assigned work rather than internal agent conversations. Human capacity prevents over-allocation. A scheduler checks for actual work every five seconds without spending model tokens while idle.

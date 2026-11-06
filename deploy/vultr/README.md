@@ -124,3 +124,7 @@ References: [Vultr provisioning](https://docs.vultr.com/products/compute/instanc
 [Docker Compose services](https://docs.docker.com/reference/compose-file/services/),
 [Caddy reverse proxy](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy),
 [official hackathon requirements](https://lablab.ai/ai-hackathons/vultr-hackathon).
+
+## Optional public demo media
+
+`/demo/` serves intentionally published files from `/var/lib/arc/public-media`, mounted read-only only in Caddy. Place the player, MP4s, posters and presentation PDF there with public read permissions. This directory persists across app releases and is separate from private state, provider keys and workspace files. Directory browsing is disabled; missing media paths return 404. Never copy private recordings or credentials into this directory. The standard app build does not bundle promotional media.

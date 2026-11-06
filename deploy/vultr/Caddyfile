@@ -18,6 +18,13 @@
 		@internal path /api/docs* /api/redoc* /api/openapi.json /api/health/ready
 		respond @internal 404
 
+		handle_path /demo/* {
+			header Content-Security-Policy "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; media-src 'self'; img-src 'self'; frame-ancestors 'none'; object-src 'none'"
+			header Cache-Control "public, max-age=300"
+			root * /media
+			file_server
+		}
+
 		handle_path /api/* {
 			# Server secret stays out of the Flutter build.
 			reverse_proxy 127.0.0.1:8000 {

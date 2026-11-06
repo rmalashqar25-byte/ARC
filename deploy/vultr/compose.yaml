@@ -91,6 +91,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ../../web-build:/srv:ro
+      - ${ARC_DATA_ROOT}/public-media:/media:ro
       - ${ARC_DATA_ROOT}/caddy/data:/data
       - ${ARC_DATA_ROOT}/caddy/config:/config
     depends_on:
