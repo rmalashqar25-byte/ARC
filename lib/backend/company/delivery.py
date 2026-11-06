@@ -31,6 +31,16 @@ def repository_for(actor):
 
 
 async def execution_request(prompt, messages, actor, session, database):
+    from developer_connections import DEVELOPER_ACTOR
+
+    token = DEVELOPER_ACTOR.set(actor)
+    try:
+        return await _execution_request(prompt, messages, actor, session, database)
+    finally:
+        DEVELOPER_ACTOR.reset(token)
+
+
+async def _execution_request(prompt, messages, actor, session, database):
     from developer_connections import connection
     from terminal_connection import terminal_is_connected
 
@@ -126,6 +136,8 @@ async def execution_request(prompt, messages, actor, session, database):
         and m.get("agent_compatible")
         and model_prices(entries.get(m["model_id"], m)) == (0, 0)
     ]
+    if own and not own.get("local") and own.get("provider") != "openrouter":
+        candidates = []
     if own and own.get("local") and own.get("supports_tools", True):
         candidates = [m for m in marketplace() if m.get("configured")]
     team = get_team(actor, session)
