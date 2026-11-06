@@ -267,6 +267,14 @@ def build_company_router(
             raise HTTPException(status_code=422, detail="Invalid session_id")
         return get_team(actor_id, session_id)
 
+    @router.get("/sessions/{session_id}/memory")
+    def project_memory(session_id: str, actor_id: str = Depends(access_dependency)):
+        from company.project_memory import read
+
+        if not 1 <= len(session_id) <= 64:
+            raise HTTPException(status_code=422, detail="Invalid session_id")
+        return {"name": "PROJECT_MEMORY.md", "content": read(actor_id, session_id)}
+
     @router.put("/sessions/{session_id}/team")
     def update_project_team(
         session_id: str,

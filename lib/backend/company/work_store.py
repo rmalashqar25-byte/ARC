@@ -34,6 +34,10 @@ class WorkStore:
                 CREATE TABLE IF NOT EXISTS usage (
                     actor TEXT NOT NULL, session TEXT NOT NULL, day TEXT NOT NULL,
                     requests INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(actor, session, day));
+                CREATE TABLE IF NOT EXISTS project_memory (
+                    actor TEXT NOT NULL, session TEXT NOT NULL, note_key TEXT NOT NULL,
+                    kind TEXT NOT NULL, content TEXT NOT NULL, updated REAL NOT NULL,
+                    PRIMARY KEY(actor, session, note_key));
             """)
             columns = {row[1] for row in db.execute("PRAGMA table_info(companies)")}
             if "price_limits" not in columns:

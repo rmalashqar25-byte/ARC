@@ -334,6 +334,13 @@ async def _execution_request(prompt, messages, actor, session, database):
         session,
         {"brief": brief, "pending": False, "task_id": task["id"]},
     )
+    from company.project_memory import remember
+
+    try:
+        remember(actor, session, "goal:" + task["id"], "goal", brief)
+        remember(actor, session, "task:" + task["id"], "task", task["description"])
+    except Exception:
+        LOG.warning("Project memory save failed", exc_info=True)
     LOG.info(
         "ARC execution stage=queued task=%s project=%s free_model=%s",
         task["id"],

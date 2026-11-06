@@ -494,6 +494,18 @@ class CompanyApiClient {
         : const [];
   }
 
+  Future<String> loadProjectMemory(String sessionId) async {
+    final response = await _client
+        .get(
+          ApiConfig.endpoint(
+            '/company/sessions/${Uri.encodeComponent(sessionId)}/memory',
+          ),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 20));
+    return _decodeResponse(response)['content']?.toString() ?? '';
+  }
+
   Future<CompanyEventsPage> loadEvents(
     String sessionId, {
     int afterId = 0,

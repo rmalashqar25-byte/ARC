@@ -294,6 +294,41 @@ class _WorkspaceSettingsPageState extends State<WorkspaceSettingsPage> {
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const _SettingsIcon(
+                  Icons.history_edu_rounded,
+                  arcLime,
+                ),
+                title: const Text(
+                  'Project memory',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Goals, assigned work, blockers, and verified results',
+                  style: TextStyle(color: Color(0xFFAAAAAA)),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: Colors.white70,
+                ),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => _ProjectMemoryPage(
+                      api: _api,
+                      sessionId: widget.sessionId.isEmpty
+                          ? ApiConfig.companySessionId
+                          : widget.sessionId,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            _SettingsCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const _SettingsIcon(
                   Icons.verified_user_outlined,
                   arcLilac,
                 ),
@@ -499,5 +534,71 @@ class _SettingsIcon extends StatelessWidget {
       border: Border.all(color: color.withValues(alpha: .2)),
     ),
     child: Icon(icon, color: color, size: 24),
+  );
+}
+
+class _ProjectMemoryPage extends StatefulWidget {
+  const _ProjectMemoryPage({required this.api, required this.sessionId});
+  final CompanyApiClient api;
+  final String sessionId;
+
+  @override
+  State<_ProjectMemoryPage> createState() => _ProjectMemoryPageState();
+}
+
+class _ProjectMemoryPageState extends State<_ProjectMemoryPage> {
+  late Future<String> _memory;
+
+  @override
+  void initState() {
+    super.initState();
+    _memory = widget.api.loadProjectMemory(widget.sessionId);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: arcCanvas,
+    appBar: AppBar(
+      title: const Text('PROJECT_MEMORY.md'),
+      backgroundColor: arcCanvas,
+      actions: [
+        IconButton(
+          tooltip: 'Refresh project memory',
+          icon: const Icon(Icons.refresh),
+          onPressed: () => setState(() {
+            _memory = widget.api.loadProjectMemory(widget.sessionId);
+          }),
+        ),
+      ],
+    ),
+    body: FutureBuilder<String>(
+      future: _memory,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData && !snapshot.hasError) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text(requestFailureMessage()));
+        }
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                SelectableText(
+                  snapshot.data!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'monospace',
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
   );
 }
