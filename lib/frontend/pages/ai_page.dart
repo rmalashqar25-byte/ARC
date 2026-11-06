@@ -1,3 +1,4 @@
+import 'package:arc/frontend/pages/companypage/work_board.dart';
 import 'package:arc/api_config.dart';
 import 'package:arc/frontend/arc_design.dart';
 import 'package:arc/frontend/arc_sidebar.dart';
@@ -32,6 +33,7 @@ class _AipageState extends State<AiPage> {
   List<Chatmessage> chat = [];
   final List<ChatSession> chatSession = [];
   bool _isSending = false;
+  String? _pausedWorkSession;
   bool _showActivity = false;
 
   String id = "";
@@ -281,6 +283,9 @@ class _AipageState extends State<AiPage> {
     try {
       final reply = await askCeo(prompt, activeSessionId);
       answer = reply.message;
+      _pausedWorkSession = answer.contains('Automatic work is paused')
+          ? activeSessionId
+          : null;
     } catch (error) {
       answer = error is CompanyApiException
           ? error.message
@@ -554,6 +559,19 @@ class _AipageState extends State<AiPage> {
                   constraints: const BoxConstraints(maxWidth: 900),
                   child: Column(
                     children: [
+                      if (_pausedWorkSession == id)
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: FilledButton.icon(
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('Start queued work'),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => WorkBoard(sessionId: id),
+                              ),
+                            ),
+                          ),
+                        ),
                       Expanded(
                         child: Center(
                           child: chat.isEmpty

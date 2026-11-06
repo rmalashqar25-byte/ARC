@@ -422,6 +422,60 @@ async def run_ceo_agent(
         _trim_session(messages)
 
         normalized = " ".join(clean_prompt.casefold().strip(" !.,?؟").split())
+        from company.work_policy import WORK_SCOPE
+
+        database = get_agent_store().work_store
+        nudges = {
+            "choose them",
+            "choose the team",
+            "choose the team then why u wait",
+            "why u wait",
+            "why are you waiting",
+            "start",
+            "start work",
+            "start working",
+            "go",
+            "continue",
+            "any updates",
+            "is it done",
+        }
+        pending = (
+            []
+            if not database
+            else [
+                t
+                for t in database.list(clean_actor_id, clean_session_id)
+                if t["status"] in {"queued", "running", "waiting_team"}
+            ]
+        )
+        if pending and normalized in nudges and WORK_SCOPE.get() is None:
+            paused = not database.company(clean_actor_id, clean_session_id)["enabled"]
+            message = (
+                "Your task is already saved. Automatic work is paused. Use **Start queued work** below to enable it. "
+                "I have not created another assignment."
+                if paused
+                else "Your team already has this assignment. I will update you when it finishes or needs a decision. "
+                "I have not created another assignment."
+            )
+            messages.append({"role": "assistant", "content": message})
+            get_agent_store().save_session(
+                clean_actor_id, "ceo", clean_session_id, messages
+            )
+            record_ceo_response(clean_actor_id, clean_session_id, message)
+            return {
+                "agent_id": "ceo",
+                "message": message,
+                "response_kind": "work_status",
+                "work_paused": paused,
+                "delegations": [],
+                "pending_approvals": [],
+                "groups": company_groups(clean_actor_id, clean_session_id),
+                "events": company_events(
+                    clean_actor_id,
+                    clean_session_id,
+                    after_id=max(int(request_event["id"]) - 1, 0),
+                ),
+            }
         greeting_request = normalized in {
             "hi",
             "hello",
@@ -641,12 +695,15 @@ async def run_ceo_agent(
         if delegated_results and all(
             item["result"].get("status") == "queued" for item in delegated_results
         ):
+            database = get_agent_store().work_store
+            paused = bool(
+                database
+                and not database.company(clean_actor_id, clean_session_id)["enabled"]
+            )
             final_message = (
-                "I’ve queued the work for your team. It has not been completed yet.\n\n"
-                + "\n".join(
-                    f"{item['assigned_to']}: {item['task']}\n{item['result']['message']}"
-                    for item in delegated_results
-                )
+                "Your team is selected and the task is saved. It has not been completed. Automatic work is paused. Use **Start queued work** below to enable it."
+                if paused
+                else "Your team has the assignment. I will update you when it finishes or needs your decision."
             )
         elif delegated_results:
             synthesis_prompt = (

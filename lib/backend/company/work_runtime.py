@@ -309,6 +309,22 @@ def queue_delegation(
         raise ValueError("Work may be delegated only to a direct report")
     scope = WORK_SCOPE.get()
     parent = scope.get("task_id") if scope else None
+    if not parent:
+        for existing in database.list(actor, session):
+            if (
+                existing["status"] == "queued"
+                and existing["assignee"] == assignee
+                and existing.get("parent") is None
+                and " ".join(existing["description"].split())
+                == " ".join(description.split())
+            ):
+                return {
+                    "agent_id": assignee,
+                    "status": "queued",
+                    "work_task_id": existing["id"],
+                    "message": "This assignment is already queued.",
+                    "pending_approvals": [],
+                }
     task = database.create(
         actor,
         session,

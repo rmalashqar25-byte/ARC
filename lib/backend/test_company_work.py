@@ -66,6 +66,40 @@ class CompanyWorkTests(unittest.TestCase):
         self.headers = {"X-Actor": "founder"}
         self.path = "/company/sessions/project/work"
 
+    def test_repeated_delegation_reuses_queued_job(self):
+        from company.work_runtime import queue_delegation
+
+        first = queue_delegation("founder", "project", "cto", "Build a calculator")
+        second = queue_delegation("founder", "project", "cto", "Build a calculator")
+        self.assertEqual(first["work_task_id"], second["work_task_id"])
+        self.assertEqual(len(self.db.list("founder", "project")), 1)
+
+    def test_paused_followup_never_calls_model_or_duplicates_work(self):
+        import asyncio
+
+        from company.ceo import run_ceo_agent
+
+        self.db.create(
+            "founder",
+            "paused-followup",
+            title="Calculator",
+            description="Build it",
+            assignee="cto",
+        )
+        with patch(
+            "company.ceo._generate", side_effect=AssertionError("No model call needed")
+        ):
+            reply = asyncio.run(
+                run_ceo_agent(
+                    "choose the team then why u wait",
+                    "paused-followup",
+                    actor_id="founder",
+                )
+            )
+        self.assertTrue(reply["work_paused"])
+        self.assertEqual(len(self.db.list("founder", "paused-followup")), 1)
+        self.assertFalse(self.db.company("founder", "paused-followup")["enabled"])
+
     def enable(self):
         self.db.configure("founder", "project", True, FREE["model_id"])
 
