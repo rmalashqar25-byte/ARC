@@ -14,6 +14,8 @@ The services used, deployment architecture, execution workflow, containment chec
 
 A company workspace for developing an idea, assembling a team, and following its work.
 
+**[Real Vultr workflow evidence](docs/evidence/vultr-company-task.json):** the company queue delegated a synthetic discount bug, the agent changed the code without changing its tests, and an independent container rerun passed. Eight free-model requests reported zero cost. This is recorded test evidence, not a claim that every user task succeeds.
+
 ## Who ARC helps
 
 A small founder-led team often loses work between chats, specialists, and freelancers. ARC gives the founder one CEO conversation, manager-owned assignments, a quiet queue, and a restricted job portal for human employees. People see their assigned work rather than internal agent conversations. Human capacity prevents over-allocation. A scheduler checks for actual work every five seconds without spending model tokens while idle.

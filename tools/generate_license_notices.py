@@ -42,7 +42,7 @@ def collect():
         records.append({"name": name, "version": item.version, "license": expression})
         for path, content in texts:
             notices.append(
-                f"{'=' * 72}\n{name} {item.version}\n{path}\n{'=' * 72}\n{content.strip()}\n"
+                f"{'=' * 72}\n{name} {item.version}\n{path}\n{'=' * 72}\n{chr(10).join(line.rstrip() for line in content.strip().splitlines())}\n"
             )
     return {"packages": records, "notices": "\n".join(notices)}
 

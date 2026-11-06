@@ -160,7 +160,11 @@ def main():
 
         def handle_request(self, request):
             index = inspect_request(request)
-            response = self.inner.handle_request(request)
+            try:
+                response = self.inner.handle_request(request)
+            except httpx.TransportError as error:
+                calls[index]["transport_error"] = type(error).__name__
+                raise
             response.read()
             inspect_response(index, response)
             return response
@@ -186,7 +190,11 @@ def main():
             ):
                 return await self.inner.handle_async_request(request)
             index = inspect_request(request)
-            response = await self.inner.handle_async_request(request)
+            try:
+                response = await self.inner.handle_async_request(request)
+            except httpx.TransportError as error:
+                calls[index]["transport_error"] = type(error).__name__
+                raise
             await response.aread()
             inspect_response(index, response)
             return response

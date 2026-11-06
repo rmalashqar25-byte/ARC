@@ -8,7 +8,7 @@ ARC is a company workspace where a founder talks to one CEO, delegates work thro
 
 Public demo: **[Open ARC](https://arc.64.177.59.174.sslip.io/)**. The application runs on one Ubuntu 24.04 x86_64 VM in **Atlanta (ATL)** with **2 vCPUs, 4 GB RAM, and 80 GB SSD storage**. Caddy provides HTTPS and serves the compiled Flutter application. The Python backend and terminal broker listen only on loopback. Company state and encrypted provider connections use private persistent VM directories outside the release. Vultr Serverless Inference is not configured or claimed.
 
-Verified on the running Vultr VM: frontend assets and public API routing; a missing session capability is rejected; API documentation and detailed readiness routes return 404 publicly; four real execution isolation checks and one timeout/cleanup check pass. Provider credentials remain outside Git and outside execution containers. A real Gemini CEO reply through the public ARC API and a zero-price OpenRouter inference request from the deployed backend both succeeded. A recorded technical demo and full delegated company-job evidence remain separate submission tasks.
+Verified on the running Vultr VM: frontend assets and public API routing; a missing session capability is rejected; API documentation and detailed readiness routes return 404 publicly; four real execution isolation checks and one timeout/cleanup check pass. Provider credentials remain outside Git and outside execution containers. A real Gemini CEO reply through the public ARC API and a zero-price OpenRouter inference request from the deployed backend both succeeded. A complete synthetic delegated company job also passed on 6 November; see [execution evidence](evidence/vultr-company-task.json). The existing submission video is promotional rather than a full technical walkthrough.
 
 Selected submission scope: **Powering the Future of Work**, because ARC coordinates ongoing company jobs, AI roles, and human deliverables. **Blast Radius Zero** is an alternative that adds stricter inference and execution requirements.
 
@@ -28,7 +28,7 @@ ARC also supports finance, operations, marketing, and legal roles. These are sof
 - A user's saved provider/model connection across CEO, all internal roles, and background reviews.
 - Human employee capacity, accept/decline, submission, manager review, and revocable invitations.
 - Restricted local terminal execution on disposable Docker project copies.
-- Local verification of a real code change, a passing agent test, and an independent passing test.
+- Local and Vultr verification of a real delegated code change, an agent test, and an independent passing test.
 - 157 backend tests and 41 Flutter tests passed during the latest local verification.
 
 Marketplace role prices are demo values. Model provider charges are separate. Automatic work has a request-count limit, not a guaranteed currency spending cap.

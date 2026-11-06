@@ -1,0 +1,110 @@
+{
+  "status": "passed",
+  "model": "cohere/north-mini-code:free",
+  "synthetic_files_only": true,
+  "checks": {
+    "baseline_failure": true,
+    "hired_exact_free_model": true,
+    "paused_chat_uses_selected_model": true,
+    "quiet_idle": true,
+    "company_worker_completed": true,
+    "default_approvals_unchanged": true,
+    "result_survives_restart": true,
+    "delegated": true,
+    "no_approval_prompts": true,
+    "agent_test_command_passed": true,
+    "agent_used_update_and_terminal": true,
+    "file_changed_by_agent": true,
+    "new_project_file_created": true,
+    "tests_unchanged": true,
+    "independent_test_pass": true,
+    "activity_recorded": true,
+    "other_actor_isolated": true
+  },
+  "test_output": ".                                                                        [100%]\n1 passed in 0.01s\n",
+  "completed_tools": [
+    "workspace_read",
+    "workspace_read",
+    "workspace_update",
+    "workspace_update",
+    "terminal_run"
+  ],
+  "provider_calls": [
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "stop",
+      "content_length": 241,
+      "completion_tokens": 66
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "stop",
+      "content_length": 824,
+      "completion_tokens": 196
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "tool_calls",
+      "content_length": 0,
+      "completion_tokens": 8
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "tool_calls",
+      "content_length": 0,
+      "completion_tokens": 9
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "tool_calls",
+      "content_length": 0,
+      "completion_tokens": 46
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "tool_calls",
+      "content_length": 0,
+      "completion_tokens": 74
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "tool_calls",
+      "content_length": 0,
+      "completion_tokens": 13
+    },
+    {
+      "requested_model": "cohere/north-mini-code:free",
+      "http_status": 200,
+      "returned_model": "cohere/north-mini-code:free",
+      "cost": 0,
+      "finish_reason": "stop",
+      "content_length": 526,
+      "completion_tokens": 116
+    }
+  ],
+  "environment": "Vultr Compute, Atlanta; deployed ARC backend and private Linux execution broker",
+  "verification_date": "2026-11-06",
+  "scope": "Isolated verification process using the deployed backend code and API router in-process on Vultr, a synthetic SQLite database, real free-model calls and the real deployed private Linux terminal broker. No production user records or approvals were changed. This is not a browser recording.",
+  "prior_model_result": "Nemotron Ultra did not return in time; initial run failed safely."
+}

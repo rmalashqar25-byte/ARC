@@ -10,6 +10,6 @@
 
 ## Real execution evidence
 
-The isolated code workflow requires an explicitly paired workspace. See docs/VULTR.md and the published evidence for what was actually run, the model and environment, rather than assuming a chat promise means success. `tools/verify_free_agent.py` seeds a failing discount test, routes an actual task through CEO and the queue, verifies the agent changed the implementation without changing the test, and independently reruns it. It stops after a bounded number of free-model calls and never edits the live company's approvals.
+[A real delegated task passed on Vultr](evidence/vultr-company-task.json) using `cohere/north-mini-code:free`, with eight provider requests, all reporting zero cost. The isolated code workflow requires an explicitly paired workspace. See docs/VULTR.md and the published evidence for what was actually run, the model and environment, rather than assuming a chat promise means success. `tools/verify_free_agent.py` seeds a failing discount test, routes an actual task through CEO and the queue, verifies the agent changed the implementation without changing the test, and independently reruns it. It stops after a bounded number of free-model calls and never edits the live company's approvals.
 
 The submitted video is the team's existing promotional video, accompanied by PDF slides. It is not a technical recording of every feature. Repository evidence and the interactive product provide additional verification. No fabricated customers, ROI, live hiring, payments, or automatic GitHub publication are claimed.

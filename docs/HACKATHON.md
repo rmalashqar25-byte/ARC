@@ -14,7 +14,7 @@ Reviewed 6 November 2026 for **Vultr: Agent Rush / Powering the Future of Work (
 | Serverless Inference | Optional for Challenge 2; not used or claimed. Challenge 1 is not claimed. |
 | Automated verification | 157 backend tests, 41 Flutter tests and 10 tool/deployment tests passed. These suites include simulated provider responses; they are not all live model tests. |
 | Real execution containment | Four real isolation checks, timeout/cleanup and a backend terminal RPC passed on Vultr. |
-| Fully delegated live coding task | The latest additional free-model test stopped safely after upstream requests failed to return. It did not change the fixture or pass the task. Do not claim this run completed. |
+| Fully delegated live coding task | [Vultr evidence](evidence/vultr-company-task.json): a real eight-call free-model workflow delegated, changed the implementation, preserved tests and passed an independent container test. The previous model timed out safely. |
 | External connectors | Finance, CRM and external cloud accounts are unconfigured. GitHub repository connection and the restricted owner terminal were verified. |
 | Personal/team eligibility | Account owner must satisfy the platform eligibility rules, registrations, rights to media and any organizer decisions about reuse. These cannot be established by source-code tests. |
 
