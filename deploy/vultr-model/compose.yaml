@@ -1,0 +1,28 @@
+services:
+  model:
+    image: ${OLLAMA_IMAGE:?Install and pin the official Ollama image first}
+    container_name: arc-model
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11434:11434"
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_CONTEXT_LENGTH: "8192"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: "-1"
+    volumes:
+      - /var/lib/arc-model:/root/.ollama
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=256m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 13g
+    cpus: 5.5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "2"

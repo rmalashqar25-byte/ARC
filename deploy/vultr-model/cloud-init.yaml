@@ -1,0 +1,65 @@
+#cloud-config
+{
+  "package_update": true,
+  "packages": [
+    "docker.io",
+    "docker-compose-v2",
+    "ufw"
+  ],
+  "ssh_pwauth": false,
+  "disable_root": true,
+  "users": [
+    {
+      "name": "arcdeploy",
+      "groups": [
+        "sudo"
+      ],
+      "sudo": "ALL=(ALL) NOPASSWD:ALL",
+      "shell": "/bin/bash",
+      "lock_passwd": true,
+      "ssh_authorized_keys": [
+        "REPLACE_WITH_ADMIN_SSH_PUBLIC_KEY"
+      ]
+    }
+  ],
+  "write_files": [
+    {
+      "path": "/opt/arc-model/compose.yaml",
+      "permissions": "0644",
+      "content": "services:\n  model:\n    image: ${OLLAMA_IMAGE:?Install and pin the official Ollama image first}\n    container_name: arc-model\n    restart: unless-stopped\n    ports:\n      - \"127.0.0.1:11434:11434\"\n    environment:\n      OLLAMA_HOST: 0.0.0.0:11434\n      OLLAMA_CONTEXT_LENGTH: \"8192\"\n      OLLAMA_NUM_PARALLEL: \"1\"\n      OLLAMA_MAX_LOADED_MODELS: \"1\"\n      OLLAMA_KEEP_ALIVE: \"-1\"\n    volumes:\n      - /var/lib/arc-model:/root/.ollama\n    read_only: true\n    tmpfs:\n      - /tmp:rw,nosuid,nodev,size=256m\n    cap_drop: [ALL]\n    security_opt: [no-new-privileges:true]\n    pids_limit: 128\n    mem_limit: 13g\n    cpus: 5.5\n    logging:\n      driver: json-file\n      options:\n        max-size: 10m\n        max-file: \"2\"\n"
+    },
+    {
+      "path": "/opt/arc-model/install.sh",
+      "permissions": "0700",
+      "content": "#!/usr/bin/env bash\nset -euo pipefail\numask 077\n[[ $(uname -m) == x86_64 ]]\nawk '/MemTotal/ { if ($2 < 15000000) exit 1 }' /proc/meminfo\nsystemctl enable --now docker\ninstall -d -m 700 /var/lib/arc-model\n# Resolve and pin the image actually downloaded from the official registry.\ndocker pull ollama/ollama:latest\nimage=$(docker image inspect --format '{{index .RepoDigests 0}}' ollama/ollama:latest)\n[[ \"$image\" == ollama/ollama@sha256:* ]]\nprintf 'OLLAMA_IMAGE=%s\\n' \"$image\" > /etc/arc-model.env\nchmod 600 /etc/arc-model.env\ndocker compose --env-file /etc/arc-model.env -f /opt/arc-model/compose.yaml up -d\n# Download weights only. No prompt, generation or benchmark is executed.\ndocker exec arc-model ollama pull qwen3.5:9b\ninstall -d -m 755 /var/lib/arc-model-deployment\ndocker exec arc-model ollama list > /var/lib/arc-model-deployment/models.txt\n"
+    }
+  ],
+  "runcmd": [
+    [
+      "ufw",
+      "default",
+      "deny",
+      "incoming"
+    ],
+    [
+      "ufw",
+      "default",
+      "allow",
+      "outgoing"
+    ],
+    [
+      "ufw",
+      "allow",
+      "22/tcp"
+    ],
+    [
+      "ufw",
+      "--force",
+      "enable"
+    ],
+    [
+      "bash",
+      "/opt/arc-model/install.sh"
+    ]
+  ]
+}
