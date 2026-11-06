@@ -17,7 +17,9 @@ from pydantic import BaseModel, Field
 
 
 class ConnectionSettings(BaseModel):
-    provider: Literal["openai", "openrouter", "gemini", "ollama", "custom"]
+    provider: Literal[
+        "openai", "openrouter", "vultr", "vultr_model", "gemini", "ollama", "custom"
+    ]
     base_url: str = Field(default="", max_length=500)
     model: str = Field(default="", max_length=200)
     model_name: str = Field(default="", max_length=200)
@@ -43,9 +45,13 @@ def build_developer_router(access):
     def settings(actor, payload, request, *, discovery=False):
         try:
             value = validated_settings(actor, payload.model_dump(), discovery=discovery)
-            if value["local"] and (
-                not request.client
-                or request.client.host not in {"127.0.0.1", "::1", "testclient"}
+            if (
+                value["local"]
+                and value["provider"] != "vultr_model"
+                and (
+                    not request.client
+                    or request.client.host not in {"127.0.0.1", "::1", "testclient"}
+                )
             ):
                 raise ValueError("Local models are available only from this computer")
             return value

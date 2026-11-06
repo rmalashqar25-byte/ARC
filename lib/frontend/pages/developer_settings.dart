@@ -34,6 +34,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
 
   bool get _local =>
       _provider == 'ollama' ||
+      _provider == 'vultr_model' ||
       (_provider == 'custom' && _address.text.trim().startsWith('http://'));
 
   @override
@@ -144,6 +145,10 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
           if (!_models.any((m) => m['id'] == _model.text)) {
             _model.clear();
             _modelName = '';
+          }
+          if (_provider == 'vultr_model' && _models.length == 1) {
+            _model.text = _models.first['id']!;
+            _modelName = _models.first['name']!;
           }
           _message = _models.isEmpty
               ? 'Connected, but no models were listed. Check your provider or local model installation.'
@@ -295,6 +300,14 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                                 child: Text('OpenRouter'),
                               ),
                               DropdownMenuItem(
+                                value: 'vultr',
+                                child: Text('Vultr Serverless Inference'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'vultr_model',
+                                child: Text('Vultr Cloud Model'),
+                              ),
+                              DropdownMenuItem(
                                 value: 'gemini',
                                 child: Text('Gemini API'),
                               ),
@@ -322,6 +335,20 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                                   }),
                           ),
                           const SizedBox(height: 18),
+                          if (_provider == 'vultr_model') ...[
+                            const Text(
+                              'Qwen runs on ARC’s dedicated Vultr server. No API key is needed. Server hosting charges apply, with no per-token provider fee. This connection powers your CEO and every company role. CPU replies can take longer.',
+                              style: TextStyle(color: _muted, height: 1.5),
+                            ),
+                            const SizedBox(height: 18),
+                          ],
+                          if (_provider == 'vultr') ...[
+                            const Text(
+                              'Connect your Vultr Serverless Inference subscription. No extra model server is needed. Vultr bills token usage; available promotional credits depend on your account. Your chosen model is used by the CEO and every company role.',
+                              style: TextStyle(color: _muted, height: 1.5),
+                            ),
+                            const SizedBox(height: 18),
+                          ],
                           if (_provider == 'ollama') ...[
                             Text(
                               _localAvailable

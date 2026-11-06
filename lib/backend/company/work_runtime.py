@@ -128,7 +128,11 @@ class CompanyWorker:
     async def process(self, task):
         actor, session, task_id = task["actor"], task["session"], task["id"]
         try:
-            result = await asyncio.wait_for(self.executor(task), timeout=240)
+            from developer_connections import connection
+
+            own = connection(actor)
+            timeout = 900 if own and own.get("provider") == "vultr_model" else 240
+            result = await asyncio.wait_for(self.executor(task), timeout=timeout)
             if result.get("status") in {"blocked", "failed", "denied"}:
                 status, message = (
                     "blocked",

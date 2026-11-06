@@ -20,6 +20,7 @@ _lock = threading.Lock()
 PRESETS = {
     "openai": "https://api.openai.com/v1",
     "openrouter": "https://openrouter.ai/api/v1",
+    "vultr": "https://api.vultrinference.com/v1",
     "gemini": "https://generativelanguage.googleapis.com/v1beta/openai",
     "ollama": "http://127.0.0.1:11434/v1",
     "custom": "",
@@ -83,22 +84,55 @@ def _cipher(create=False):
     return Fernet(_protect_key(path.read_bytes(), decrypt=True))
 
 
+def vultr_model_connection():
+    """Only the administrator can enable this fixed private tunnel destination."""
+    if os.getenv("ARC_VULTR_MODEL_ENABLED") != "1":
+        raise ValueError("The Vultr model server is not enabled")
+    model = os.getenv("ARC_VULTR_MODEL", "qwen3.5:9b")
+    return dict(
+        provider="vultr_model",
+        base_url="http://127.0.0.1:11435/v1",
+        model=model,
+        model_name="Qwen3.5 9B · Vultr",
+        api_key="",
+        supports_tools=True,
+        confirm_usage=False,
+        local=True,
+    )
+
+
+def default_connection():
+    if os.getenv("ARC_DEFAULT_MODEL_PROVIDER") == "vultr_model":
+        return vultr_model_connection()
+    return None
+
+
 def connection(actor=None):
     actor = actor or DEVELOPER_ACTOR.get()
     if not actor or not (vault_root() / "connections.sqlite3").is_file():
-        return None
+        return default_connection()
     with _lock, _connect() as db:
         row = db.execute(
             "SELECT secret FROM connections WHERE actor=?", (actor,)
         ).fetchone()
         if row:
             # Fail closed on corruption/lost encryption key; never use ARC's key instead.
-            return json.loads(_cipher().decrypt(row[0]))
-    return None
+            value = json.loads(_cipher().decrypt(row[0]))
+            return (
+                vultr_model_connection()
+                if value.get("provider") == "vultr_model"
+                else value
+            )
+    return default_connection()
 
 
 def public_connection(value):
-    return {k: v for k, v in (value or {}).items() if k != "api_key"}
+    return {
+        k: v
+        for k, v in (value or {}).items()
+        if k != "api_key"
+        and not (k == "base_url" and value.get("provider") == "vultr_model")
+    }
 
 
 def local_developer_enabled():
@@ -182,13 +216,18 @@ class ModelTransport(httpx.BaseTransport):
 
 
 def model_client(value):
+    managed = value.get("provider") == "vultr_model"
+    if managed:
+        value = vultr_model_connection()
     return OpenAI(
         base_url=value["base_url"],
         api_key=value.get("api_key") or "local-model",
-        timeout=90,
+        timeout=300 if managed else 90,
         max_retries=0,
         http_client=httpx.Client(
-            transport=ModelTransport(value["base_url"]),
+            transport=httpx.HTTPTransport(retries=0)
+            if managed
+            else ModelTransport(value["base_url"]),
             follow_redirects=False,
             trust_env=False,
         ),
@@ -202,8 +241,10 @@ def completion_options(value, token_limit):
         if value["provider"] == "openai"
         else "max_tokens": token_limit
     }
-    if value["provider"] == "ollama":
+    if value["provider"] in {"ollama", "vultr_model"}:
         options["reasoning_effort"] = "none"
+    if value["provider"] == "vultr_model":
+        options["max_tokens"] = min(token_limit, 2048)
     return options
 
 
@@ -212,7 +253,22 @@ def discover_models(value):
     with model_client(value).with_options(timeout=15) as client:
         if value["provider"] == "openrouter":
             client.get("/key", cast_to=dict[str, object])
-        response = client.models.list()
+        if value["provider"] == "vultr":
+            # The catalog is public; authenticate separately without generating tokens.
+            client.get("/usage", cast_to=dict[str, object])
+        response = client.models.list(
+            **(
+                {
+                    "extra_query": {
+                        "format": "openrouter",
+                        "output_modalities": "text",
+                        "supported_parameters": "tools",
+                    }
+                }
+                if value["provider"] == "vultr"
+                else {}
+            )
+        )
         return [
             {"id": m.id, "name": str(getattr(m, "name", None) or m.id)[:200]}
             for m in response.data[:2000]
@@ -223,6 +279,11 @@ def discover_models(value):
 def validated_settings(actor, payload, *, discovery=False):
     value = dict(payload)
     provider = value["provider"]
+    if provider == "vultr_model":
+        managed = vultr_model_connection()
+        if not discovery and value.get("model") != managed["model"]:
+            raise ValueError("Choose the installed Vultr model")
+        return managed
     endpoint = (
         value.get("base_url", "").strip() if provider == "custom" else PRESETS[provider]
     )

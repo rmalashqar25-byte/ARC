@@ -348,7 +348,7 @@ class CompanyApiClient {
           headers: await _headers(jsonBody: true),
           body: jsonEncode({'session_id': sessionId, 'approve': approve}),
         )
-        .timeout(const Duration(minutes: 2));
+        .timeout(const Duration(minutes: 6));
     return _decodeResponse(response);
   }
 
@@ -529,7 +529,7 @@ class CompanyApiClient {
           headers: await _headers(jsonBody: true),
           body: jsonEncode({'prompt': prompt, 'session_id': sessionId}),
         )
-        .timeout(const Duration(minutes: 3));
+        .timeout(const Duration(minutes: 6));
     return CompanyCeoResult.fromJson(_decodeResponse(response));
   }
 
@@ -595,7 +595,7 @@ class CompanyApiClient {
             'approve': approve,
           }),
         )
-        .timeout(const Duration(minutes: 2));
+        .timeout(const Duration(minutes: 6));
     return _decodeResponse(response);
   }
 

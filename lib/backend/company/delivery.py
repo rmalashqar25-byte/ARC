@@ -126,8 +126,9 @@ async def _execution_request(prompt, messages, actor, session, database):
     )
     if not brief:
         return None
-    await refresh_catalog()
     own = connection(actor)
+    if not own or not own.get("local"):
+        await refresh_catalog()
     entries = {m["model_id"]: m for m in catalog()}
     candidates = [
         m
@@ -140,6 +141,17 @@ async def _execution_request(prompt, messages, actor, session, database):
         candidates = []
     if own and own.get("local") and own.get("supports_tools", True):
         candidates = [m for m in marketplace() if m.get("configured")]
+    if (
+        own
+        and own.get("provider") == "vultr"
+        and own.get("confirm_usage")
+        and not re.search(r"\bfree\b", text)
+    ):
+        candidates = [
+            m
+            for m in marketplace()
+            if m.get("configured") and m.get("agent_compatible")
+        ]
     team = get_team(actor, session)
     preferred = next(
         (m["agent_id"] for m in team["members"] if m["role_id"] == "cto"),
