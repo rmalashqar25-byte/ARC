@@ -205,7 +205,15 @@ async def run_company_agent(
             messages,
         )
 
-        for _ in range(MAX_AGENT_STEPS):
+        for step in range(MAX_AGENT_STEPS):
+            final_turn = step == MAX_AGENT_STEPS - 1
+            if final_turn:
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": "Tool budget exhausted. Report the actual deliverable or exact blocker now. Do not claim a working app or GitHub push without tool evidence. Do not call tools.",
+                    }
+                )
             from company.work_policy import model_gate
 
             model_gate(active_model)
@@ -217,8 +225,14 @@ async def run_company_agent(
                     own,
                     output_token_limit("ARC_AGENT_MAX_OUTPUT_TOKENS", 4096),
                     messages=messages,
-                    tools=tool_schemas(active_tools),
-                    tool_choice="auto",
+                    **(
+                        {}
+                        if final_turn
+                        else {
+                            "tools": tool_schemas(active_tools),
+                            "tool_choice": "auto",
+                        }
+                    ),
                     extra_body=reasoning_options("ARC_AGENT_REASONING", active_model),
                 )
             else:
@@ -230,8 +244,14 @@ async def run_company_agent(
                     model=active_model,
                     max_tokens=output_token_limit("ARC_AGENT_MAX_OUTPUT_TOKENS", 4096),
                     messages=messages,
-                    tools=tool_schemas(active_tools),
-                    tool_choice="auto",
+                    **(
+                        {}
+                        if final_turn
+                        else {
+                            "tools": tool_schemas(active_tools),
+                            "tool_choice": "auto",
+                        }
+                    ),
                     extra_body=reasoning_options("ARC_AGENT_REASONING", active_model),
                 )
             message = completion.choices[0].message

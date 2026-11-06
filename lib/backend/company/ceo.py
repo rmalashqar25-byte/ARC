@@ -660,11 +660,20 @@ async def run_ceo_agent(
             try:
                 proposed = json.loads(_clean_json_text(plan_text)).get("team")
                 if proposed:
+                    from developer_connections import connection
+
+                    own = connection(clean_actor_id)
+                    if own and isinstance(proposed, list):
+                        proposed = [
+                            dict(m, agent_id=own["model"])
+                            for m in proposed
+                            if isinstance(m, dict)
+                        ]
                     team = save_team(clean_actor_id, clean_session_id, "ceo", proposed)
             except (ValueError, TypeError, AttributeError, StopIteration):
                 if not team["members"]:
                     delegations = []
-                plan_message = "I couldn’t finalize your team. Please review your choices in the marketplace and try again."
+                    plan_message = "I couldn’t finalize your team. Please review your choices in the marketplace and try again."
         if team["mode"] != "undecided":
             hired = {m["role_id"] for m in team["members"]}
             missing = [d["agent"] for d in delegations if d["agent"] not in hired]

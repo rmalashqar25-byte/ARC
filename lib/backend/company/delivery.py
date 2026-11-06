@@ -56,7 +56,8 @@ async def _execution_request(prompt, messages, actor, session, database):
     code = bool(
         re.search(r"\b(build|create|make|implement|push)\b", text)
         and re.search(
-            r"\b(calculator|calculter|calcluter|calcleter|calclater|app|website|software|project)\b", text
+            r"\b(calculator|calculter|calcluter|calcleter|calclater|game|dashboard|app|website|software|project)\b",
+            text,
         )
     )
     nudge = bool(
@@ -68,11 +69,16 @@ async def _execution_request(prompt, messages, actor, session, database):
         )
     )
     status = bool(
-        (tasks or intent.get("pending"))
-        and len(text.split()) <= 10
-        and any(
-            w in text
-            for w in ("push it", "pushed", "status", "is it done", "any updates")
+        len(text.split()) <= 20
+        and (
+            any(
+                w in text
+                for w in ("push it", "pushed", "status", "is it done", "any updates")
+            )
+            or (
+                re.search(r"\b(can|could|did|have|do)\b", text)
+                and re.search(r"\b(push|publish)\b", text)
+            )
         )
     )
     if not (code or nudge or status):
@@ -83,7 +89,13 @@ async def _execution_request(prompt, messages, actor, session, database):
     if status:
         if latest is None:
             return {
-                "message": "Not pushed. Your saved request is waiting for this workspace's GitHub and terminal connection.",
+                "message": (
+                    "GitHub is connected for "
+                    + repository_for(actor)[0]
+                    + ". No completed project push is recorded for this conversation."
+                    if repository_for(actor)
+                    else "GitHub is not connected to this browser workspace. Connect it in Plugins before requesting a push."
+                ),
                 "response_kind": "connection_required",
             }
         receipt = latest.get("delivery", {})
@@ -111,7 +123,7 @@ async def _execution_request(prompt, messages, actor, session, database):
             r"\b(build|create|make|implement|push)\b", m.get("content", "").lower()
         )
         and re.search(
-            r"\b(calculator|calculter|calcluter|calcleter|calclater|app|website|software|project)\b",
+            r"\b(calculator|calculter|calcluter|calcleter|calclater|game|dashboard|app|website|software|project)\b",
             m.get("content", "").lower(),
         )
     ]
