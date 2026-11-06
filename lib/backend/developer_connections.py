@@ -2,10 +2,12 @@
 
 import ipaddress
 import json
+import logging
 import os
 import socket
 import sqlite3
 import threading
+import time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
@@ -101,10 +103,90 @@ def vultr_model_connection():
     )
 
 
+def server_connections():
+    """Operator-configured routing; personal provider connections remain explicit."""
+    values = []
+    for provider, key_name, model_name in (
+        ("openrouter", "OPENROUTER_API_KEY", "OPENROUTER_MAIN_MODEL"),
+        ("gemini", "GEMINI_API_KEY", "GEMINI_CEO_MODEL"),
+    ):
+        key, model = os.getenv(key_name, "").strip(), os.getenv(model_name, "").strip()
+        if key and model:
+            values.append(
+                dict(
+                    provider=provider,
+                    base_url=PRESETS[provider],
+                    api_key=key,
+                    model=model,
+                    model_name=model,
+                    supports_tools=True,
+                    confirm_usage=True,
+                    local=False,
+                    server_managed=True,
+                )
+            )
+    if os.getenv("ARC_VULTR_MODEL_ENABLED") == "1":
+        values.append(dict(vultr_model_connection(), server_managed=True))
+    return values
+
+
 def default_connection():
+    if os.getenv("ARC_DEFAULT_MODEL_PROVIDER") == "auto":
+        return next(iter(server_connections()), None)
     if os.getenv("ARC_DEFAULT_MODEL_PROVIDER") == "vultr_model":
         return vultr_model_connection()
     return None
+
+
+_provider_retry_after = {}
+
+
+def create_completion(value, token_limit, **kwargs):
+    """Retry generation only, before executing any returned tool calls."""
+    candidates = server_connections() if value.get("server_managed") else [value]
+    last_error = None
+    for candidate in candidates:
+        provider = candidate["provider"]
+        if (
+            value.get("server_managed")
+            and _provider_retry_after.get(provider, 0) > time.monotonic()
+        ):
+            continue
+        try:
+            with model_client(candidate) as client:
+                response = client.with_options(
+                    timeout=300 if provider == "vultr_model" else 25
+                ).chat.completions.create(
+                    model=candidate["model"],
+                    **completion_options(candidate, token_limit),
+                    **kwargs,
+                )
+                if not response.choices or not (
+                    response.choices[0].message.content
+                    or response.choices[0].message.tool_calls
+                ):
+                    raise ValueError("Empty model response")
+                return response
+        except Exception as error:
+            status = getattr(error, "status_code", None)
+            recoverable = (
+                status in {400, 401, 402, 403, 404, 408, 429}
+                or (status is not None and status >= 500)
+                or isinstance(error, (httpx.TransportError, TimeoutError, ValueError))
+                or error.__class__.__name__ in {"APIConnectionError", "APITimeoutError"}
+            )
+            if not value.get("server_managed") or not recoverable:
+                raise
+            last_error = error
+            _provider_retry_after[provider] = time.monotonic() + 60
+            logging.getLogger("uvicorn.error").warning(
+                "Model provider %s unavailable (%s); trying next configured provider",
+                provider,
+                status or type(error).__name__,
+            )
+    raise RuntimeError(
+        "Configured model providers are temporarily unavailable"
+    ) from last_error
 
 
 def connection(actor=None):
@@ -243,7 +325,7 @@ def completion_options(value, token_limit):
     }
     if value["provider"] in {"ollama", "vultr_model"}:
         options["reasoning_effort"] = "none"
-    if value["provider"] == "vultr_model":
+    if value.get("server_managed") or value["provider"] == "vultr_model":
         options["max_tokens"] = min(token_limit, 2048)
     return options
 

@@ -211,7 +211,7 @@ async def _generate(
     if not configuration["configured"]:
         raise CeoProviderError("The selected CEO provider is not configured")
     if configuration["provider"] == "developer":
-        from developer_connections import completion_options, connection, model_client
+        from developer_connections import connection, create_completion
 
         from company.work_policy import model_gate
 
@@ -219,22 +219,17 @@ async def _generate(
 
         def generate():
             own = connection()
-            with model_client(own) as client:
-                response = client.chat.completions.create(
-                    model=own["model"],
-                    messages=[
-                        {"role": "system", "content": system_instruction},
-                        {"role": "user", "content": prompt},
-                    ],
-                    **completion_options(own, limit),
-                    extra_body=reasoning_options("ARC_CEO_REASONING", own["model"]),
-                    **(
-                        {"response_format": {"type": "json_object"}}
-                        if json_output
-                        else {}
-                    ),
-                )
-                return response.choices[0].message.content
+            response = create_completion(
+                own,
+                limit,
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt},
+                ],
+                extra_body=reasoning_options("ARC_CEO_REASONING", own["model"]),
+                **({"response_format": {"type": "json_object"}} if json_output else {}),
+            )
+            return response.choices[0].message.content
 
         try:
             text = await asyncio.to_thread(generate)

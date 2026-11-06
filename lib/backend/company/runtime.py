@@ -112,7 +112,7 @@ async def run_company_agent(
     hired_agent = assignment(actor_id, session_id, profile.slug)
     if team["mode"] in {"manual", "ceo"} and hired_agent is None:
         raise ValueError(f"{profile.job_title} has not been hired for this project")
-    from developer_connections import completion_options, connection, model_client
+    from developer_connections import connection
 
     own = connection(actor_id)
     active_model = (
@@ -209,32 +209,31 @@ async def run_company_agent(
             from company.work_policy import model_gate
 
             model_gate(active_model)
-            client = model_client(own) if own else _openrouter_client()
-            if scope:
-                client = client.with_options(max_retries=0)
-            try:
+            from developer_connections import create_completion
+
+            if own:
                 completion = await asyncio.to_thread(
-                    client.chat.completions.create,
-                    model=active_model,
-                    **(
-                        completion_options(
-                            own, output_token_limit("ARC_AGENT_MAX_OUTPUT_TOKENS", 4096)
-                        )
-                        if own
-                        else {
-                            "max_tokens": output_token_limit(
-                                "ARC_AGENT_MAX_OUTPUT_TOKENS", 4096
-                            )
-                        }
-                    ),
+                    create_completion,
+                    own,
+                    output_token_limit("ARC_AGENT_MAX_OUTPUT_TOKENS", 4096),
                     messages=messages,
                     tools=tool_schemas(active_tools),
                     tool_choice="auto",
                     extra_body=reasoning_options("ARC_AGENT_REASONING", active_model),
                 )
-            finally:
-                if own:
-                    client.close()
+            else:
+                client = _openrouter_client()
+                if scope:
+                    client = client.with_options(max_retries=0)
+                completion = await asyncio.to_thread(
+                    client.chat.completions.create,
+                    model=active_model,
+                    max_tokens=output_token_limit("ARC_AGENT_MAX_OUTPUT_TOKENS", 4096),
+                    messages=messages,
+                    tools=tool_schemas(active_tools),
+                    tool_choice="auto",
+                    extra_body=reasoning_options("ARC_AGENT_REASONING", active_model),
+                )
             message = completion.choices[0].message
             message_payload = message.model_dump(exclude_none=True)
             if isinstance(message_payload.get("content"), str):

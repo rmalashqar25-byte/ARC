@@ -54,9 +54,9 @@ async def _execution_request(prompt, messages, actor, session, database):
     tasks = database.list(actor, session)
     intent = get_agent_store().load_session(actor, "execution_request", session) or {}
     code = bool(
-        re.search(r"\b(build|create|make|implement)\b", text)
+        re.search(r"\b(build|create|make|implement|push)\b", text)
         and re.search(
-            r"\b(calculator|calculter|calcluter|app|website|software|project)\b", text
+            r"\b(calculator|calculter|calcluter|calcleter|calclater|app|website|software|project)\b", text
         )
     )
     nudge = bool(
@@ -108,10 +108,10 @@ async def _execution_request(prompt, messages, actor, session, database):
         for m in messages
         if m.get("role") == "user"
         and re.search(
-            r"\b(build|create|make|implement)\b", m.get("content", "").lower()
+            r"\b(build|create|make|implement|push)\b", m.get("content", "").lower()
         )
         and re.search(
-            r"\b(calculator|calculter|calcluter|app|website|software|project)\b",
+            r"\b(calculator|calculter|calcluter|calcleter|calclater|app|website|software|project)\b",
             m.get("content", "").lower(),
         )
     ]
@@ -192,9 +192,7 @@ async def _execution_request(prompt, messages, actor, session, database):
     LOG.info(
         "ARC execution stage=team_saved project=%s roles=cto,app_developer", session
     )
-    wants_push = "push" in brief.lower() and any(
-        w in brief.lower().replace(" ", "") for w in ("github", "git")
-    )
+    wants_push = "push" in brief.lower()
     target = repository_for(actor) if wants_push else None
     get_agent_store().save_session(
         actor,

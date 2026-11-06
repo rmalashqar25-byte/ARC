@@ -277,7 +277,12 @@ class WorkStore:
             from developer_connections import connection
 
             own = connection(row["actor"])
-            lease = 1200 if own and own.get("provider") == "vultr_model" else 300
+            lease = (
+                1200
+                if own
+                and (own.get("server_managed") or own.get("provider") == "vultr_model")
+                else 300
+            )
             db.execute(
                 "UPDATE tasks SET status='running', attempts=attempts+1, lease=?, updated=? WHERE id=?",
                 (now + lease, now, row["id"]),

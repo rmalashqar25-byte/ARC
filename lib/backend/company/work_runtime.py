@@ -131,7 +131,12 @@ class CompanyWorker:
             from developer_connections import connection
 
             own = connection(actor)
-            timeout = 900 if own and own.get("provider") == "vultr_model" else 240
+            timeout = (
+                900
+                if own
+                and (own.get("server_managed") or own.get("provider") == "vultr_model")
+                else 240
+            )
             result = await asyncio.wait_for(self.executor(task), timeout=timeout)
             if result.get("status") in {"blocked", "failed", "denied"}:
                 status, message = (
